@@ -1,0 +1,48 @@
+.board-grid-wrapper {
+  position: relative;
+  margin-bottom: 72px;
+}
+
+.board-grid {
+  border: 2px solid var(--accent-purple);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.board-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.15s;
+  cursor: pointer;
+  user-select: none;
+}
+
+.board-cell:hover {
+  background: rgba(124, 58, 237, 0.15) !important;
+}
+
+.board-cell.occupied {
+  cursor: default;
+}
+
+.board-cell.drop-valid {
+  outline: 2px solid var(--accent-green);
+  outline-offset: -2px;
+}
+
+.board-cell.drop-invalid {
+  outline: 2px solid var(--accent-red);
+  outline-offset: -2px;
+}
+
+.bonus-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  line-height: 1;
+}
