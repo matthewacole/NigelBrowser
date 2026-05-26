@@ -103,6 +103,7 @@ export function calculateScore(
   direction: MoveDirection,
   board: BoardSquare[][]
 ): { score: number; isBingo: boolean; words: { word: string; score: number }[] } {
+  const virtualBoard = createVirtualBoard(board, tiles);
   const words = extractWords(tiles, direction, board);
   let totalScore = 0;
   const scoredWords: { word: string; score: number }[] = [];
@@ -114,21 +115,22 @@ export function calculateScore(
 
     for (const { row, col } of positions) {
       const square = board[row][col];
-      if (square.tile) {
+      const virtualSquare = virtualBoard[row][col];
+      if (virtualSquare.tile) {
         const isNewlyPlaced = placedPositions.has(`${row},${col}`);
         if (isNewlyPlaced) {
           const mult = bonusScoreMultiplier(square.bonus);
           wordMultiplier *= mult.word;
-          wordScore += square.tile.score * mult.letter;
+          wordScore += virtualSquare.tile.score * mult.letter;
         } else {
-          wordScore += square.tile.score;
+          wordScore += virtualSquare.tile.score;
         }
       }
     }
 
     wordScore *= wordMultiplier;
     totalScore += wordScore;
-    const wordStr = positions.map(p => board[p.row][p.col].tile!.letter).join('');
+    const wordStr = positions.map(p => virtualBoard[p.row][p.col].tile!.letter).join('');
     scoredWords.push({ word: wordStr, score: wordScore });
   }
 
@@ -285,47 +287,60 @@ function hasAdjacentPlacedTile(
   return false;
 }
 
+function createVirtualBoard(board: BoardSquare[][], newTiles: PlacedTile[]): BoardSquare[][] {
+  const vb = board.map(row => row.map(sq => ({
+    ...sq,
+    tile: sq.tile ? { ...sq.tile } : null,
+    bonus: sq.bonus as any,
+  })));
+  for (const t of newTiles) {
+    vb[t.row][t.col] = { ...vb[t.row][t.col], tile: { ...t.tile } };
+  }
+  return vb;
+}
+
 function extractWords(
   tiles: PlacedTile[],
   direction: MoveDirection,
   board: BoardSquare[][]
 ): { word: string; positions: { row: number; col: number }[] }[] {
+  const virtualBoard = createVirtualBoard(board, tiles);
   const words: { word: string; positions: { row: number; col: number }[] }[] = [];
 
   if (direction === 'horizontal') {
     const firstTile = tiles[0];
     const row = firstTile.row;
     let startCol = firstTile.col;
-    while (startCol > 0 && board[row][startCol - 1].tile !== null) startCol--;
+    while (startCol > 0 && virtualBoard[row][startCol - 1].tile !== null) startCol--;
     const positions: { row: number; col: number }[] = [];
     let col = startCol;
-    while (col < BOARD_SIZE && board[row][col].tile !== null) {
+    while (col < BOARD_SIZE && virtualBoard[row][col].tile !== null) {
       positions.push({ row, col });
       col++;
     }
     if (positions.length >= 2) {
-      const wordStr = positions.map(p => board[p.row][p.col].tile!.letter).join('');
+      const wordStr = positions.map(p => virtualBoard[p.row][p.col].tile!.letter).join('');
       words.push({ word: wordStr, positions });
     }
   } else {
     const firstTile = tiles[0];
     const col = firstTile.col;
     let startRow = firstTile.row;
-    while (startRow > 0 && board[startRow - 1][col].tile !== null) startRow--;
+    while (startRow > 0 && virtualBoard[startRow - 1][col].tile !== null) startRow--;
     const positions: { row: number; col: number }[] = [];
     let row = startRow;
-    while (row < BOARD_SIZE && board[row][col].tile !== null) {
+    while (row < BOARD_SIZE && virtualBoard[row][col].tile !== null) {
       positions.push({ row, col });
       row++;
     }
     if (positions.length >= 2) {
-      const wordStr = positions.map(p => board[p.row][p.col].tile!.letter).join('');
+      const wordStr = positions.map(p => virtualBoard[p.row][p.col].tile!.letter).join('');
       words.push({ word: wordStr, positions });
     }
   }
 
   for (const pt of tiles) {
-    const cross = extractCrossWord(pt.row, pt.col, direction === 'horizontal' ? 'vertical' : 'horizontal', board);
+    const cross = extractCrossWord(pt.row, pt.col, direction === 'horizontal' ? 'vertical' : 'horizontal', virtualBoard);
     if (cross) words.push(cross);
   }
 
@@ -336,30 +351,30 @@ function extractCrossWord(
   row: number,
   col: number,
   direction: MoveDirection,
-  board: BoardSquare[][]
+  vboard: BoardSquare[][]
 ): { word: string; positions: { row: number; col: number }[] } | null {
   const positions: { row: number; col: number }[] = [];
 
   if (direction === 'vertical') {
     let startRow = row;
-    while (startRow > 0 && board[startRow - 1][col].tile !== null) startRow--;
+    while (startRow > 0 && vboard[startRow - 1][col].tile !== null) startRow--;
     let r = startRow;
-    while (r < BOARD_SIZE && board[r][col].tile !== null) {
+    while (r < BOARD_SIZE && vboard[r][col].tile !== null) {
       positions.push({ row: r, col });
       r++;
     }
   } else {
     let startCol = col;
-    while (startCol > 0 && board[row][startCol - 1].tile !== null) startCol--;
+    while (startCol > 0 && vboard[row][startCol - 1].tile !== null) startCol--;
     let c = startCol;
-    while (c < BOARD_SIZE && board[row][c].tile !== null) {
+    while (c < BOARD_SIZE && vboard[row][c].tile !== null) {
       positions.push({ row, col: c });
       c++;
     }
   }
 
   if (positions.length >= 2) {
-    const wordStr = positions.map(p => board[p.row][p.col].tile!.letter).join('');
+    const wordStr = positions.map(p => vboard[p.row][p.col].tile!.letter).join('');
     return { word: wordStr, positions };
   }
   return null;

@@ -14,6 +14,7 @@ interface BoardGridProps {
   onCommitMove: (move: Move) => void;
   rackTiles: TileType[];
   onRecallTiles: (tiles: { tile: TileType; row: number; col: number }[]) => void;
+  onPlacedTilesChange?: (placedTileIds: string[]) => void;
   readOnly?: boolean;
 }
 
@@ -49,7 +50,7 @@ const EMPTY_DRAG: DragState = {
 };
 
 export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function BoardGrid({
-  board, onCommitMove, rackTiles, onRecallTiles, readOnly
+  board, onCommitMove, rackTiles, onRecallTiles, readOnly, onPlacedTilesChange
 }, ref) {
   const [drag, setDrag] = useState<DragState>(EMPTY_DRAG);
   const [placedTiles, setPlacedTiles] = useState<Map<string, { tile: TileType; row: number; col: number }>>(new Map());
@@ -60,6 +61,10 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
 
   dragRef.current = drag;
   placedRef.current = placedTiles;
+
+  useEffect(() => {
+    onPlacedTilesChange?.(Array.from(placedTiles.values()).map(p => p.tile.id));
+  }, [placedTiles, onPlacedTilesChange]);
 
   const getBoardCell = useCallback((clientX: number, clientY: number): { row: number; col: number } | null => {
     const el = boardRef.current;
@@ -209,20 +214,22 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
   }, [readOnly, onRecallTiles]);
 
   const getPreviewState = useCallback(() => {
-    const tiles = Array.from(placedRef.current.values());
-    if (tiles.length === 0) return null;
+    const placed = Array.from(placedRef.current.values());
+    if (placed.length === 0) return null;
 
-    const validation = validatePlacement(
-      tiles.map(t => ({ tile: t.tile, row: t.row, col: t.col })),
-      board
-    );
+    const newTiles = placed.map(t => ({ tile: t.tile, row: t.row, col: t.col }));
+
+    const validation = validatePlacement(newTiles, board);
 
     if (!validation.valid) {
       return { valid: false, error: validation.error ?? null, score: null, words: null };
     }
 
     const words = validation.words!.map(w => {
-      return w.positions.map(p => board[p.row][p.col].tile?.letter ?? '').join('');
+      return w.positions.map(p => {
+        const placedTile = placedRef.current.get(`${p.row},${p.col}`);
+        return placedTile ? placedTile.tile.letter : (board[p.row][p.col].tile?.letter ?? '');
+      }).join('');
     });
 
     const { valid, invalidWords } = wordValidator.validateWords(words);
@@ -231,7 +238,7 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
     }
 
     const { score, isBingo, words: scoredWords } = calculateScore(
-      tiles.map(t => ({ tile: t.tile, row: t.row, col: t.col })),
+      newTiles,
       validation.direction!,
       board
     );

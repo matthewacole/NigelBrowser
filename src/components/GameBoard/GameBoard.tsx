@@ -19,10 +19,13 @@ export function GameBoard() {
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
   const [animateBingo, setAnimateBingo] = useState(false);
   const [bingoScore, setBingoScore] = useState(0);
+  const [placedTileIds, setPlacedTileIds] = useState<string[]>([]);
   const boardGridRef = useRef<BoardGridHandle>(null);
 
   const currentPlayer = state.game.players[state.game.currentPlayerIndex];
   const isAIThinking = state.game.players[state.game.currentPlayerIndex]?.type === 'computer';
+
+  const visibleRack = (currentPlayer?.rack ?? []).filter(t => !placedTileIds.includes(t.id));
   const prevMoveCount = state.game.moveHistory.length;
 
   useEffect(() => {
@@ -37,6 +40,10 @@ export function GameBoard() {
   const handleCommitMove = useCallback((move: Move) => {
     attemptPlay(move);
   }, [attemptPlay]);
+
+  const handlePlacedTilesChange = useCallback((ids: string[]) => {
+    setPlacedTileIds(ids);
+  }, []);
 
   const handleRecallTiles = useCallback((tiles: { tile: TileType; row: number; col: number }[]) => {
   }, []);
@@ -115,8 +122,9 @@ export function GameBoard() {
             ref={boardGridRef}
             board={state.game.board}
             onCommitMove={handleCommitMove}
-            rackTiles={currentPlayer?.rack ?? []}
+            rackTiles={visibleRack}
             onRecallTiles={handleRecallTiles}
+            onPlacedTilesChange={handlePlacedTilesChange}
             readOnly={isAIThinking}
           />
 
@@ -133,7 +141,7 @@ export function GameBoard() {
         ) : (
           <>
             <Rack
-              tiles={currentPlayer?.rack ?? []}
+              tiles={visibleRack}
               selectedTileId={selectedTileId}
               onTileClick={handleRackTileClick}
               onTilePointerDown={handleRackTilePointerDown}
