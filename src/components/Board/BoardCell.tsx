@@ -14,20 +14,20 @@ interface BoardCellProps {
 }
 
 const BONUS_COLORS: Record<string, string> = {
-  tripleWord: '#FF3B30',
-  doubleWord: '#FF9500',
-  tripleLetter: '#007AFF',
-  doubleLetter: '#59ABE6',
-  center: '#FF9500',
+  tripleWord: 'rgba(255, 59, 48, 0.25)',
+  doubleWord: 'rgba(255, 159, 10, 0.2)',
+  tripleLetter: 'rgba(74, 158, 255, 0.25)',
+  doubleLetter: 'rgba(74, 158, 255, 0.15)',
+  center: 'rgba(255, 159, 10, 0.25)',
   normal: 'transparent',
 };
 
 const BONUS_TEXT_COLORS: Record<string, string> = {
-  tripleWord: '#FF3B30',
-  doubleWord: '#FF9500',
-  tripleLetter: '#007AFF',
-  doubleLetter: '#59ABE6',
-  center: '#FF9500',
+  tripleWord: '#ff6659',
+  doubleWord: '#ffb340',
+  tripleLetter: '#6bb3ff',
+  doubleLetter: '#8ec4ff',
+  center: '#ffb340',
   normal: 'transparent',
 };
 
@@ -61,7 +61,7 @@ export function BoardCell({
         height: cellSize,
         backgroundColor: bgColor,
         position: 'relative',
-        borderRadius: isPremium ? 2 : 0,
+        borderRadius: isPremium ? 3 : 0,
       }}
       onClick={onClick}
       onPointerDown={onPointerDown}

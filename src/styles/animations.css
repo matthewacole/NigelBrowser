@@ -2,25 +2,24 @@
 .ai-border {
   position: absolute;
   inset: -4px;
-  border-radius: 10px;
+  border-radius: 12px;
   pointer-events: none;
   z-index: 10;
   background: conic-gradient(
     from 0deg,
     transparent,
-    transparent 10%,
-    #7c3aed 25%,
-    #3b82f6 40%,
-    transparent 50%,
-    transparent 60%,
-    #ec4899 75%,
-    #7c3aed 90%,
-    transparent
+    transparent 15%,
+    #a855f7 30%,
+    #4a9eff 50%,
+    transparent 65%,
+    transparent 80%,
+    #ff6482 90%,
+    #a855f7 100%
   );
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: xor;
   padding: 3px;
-  animation: rotate-gradient 2s linear infinite;
+  animation: rotate-gradient 2.5s linear infinite;
   filter: blur(0.5px);
 }
 
@@ -38,29 +37,27 @@
 /* Floating tiles on menu */
 @keyframes fall {
   0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
-  10% { opacity: 0.6; }
-  90% { opacity: 0.6; }
-  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  10% { opacity: 0.5; }
+  90% { opacity: 0.5; }
+  100% { transform: translateY(110vh) rotate(1080deg); opacity: 0; }
 }
-
-/* Bingo confetti handles itself via canvas */
 
 /* Tile placement animation */
 @keyframes tile-place {
-  0% { transform: scale(1.3); opacity: 0; }
-  50% { transform: scale(0.95); }
+  0% { transform: scale(1.2); opacity: 0; }
+  50% { transform: scale(0.92); }
   100% { transform: scale(1); opacity: 1; }
 }
 
 .tile.just-placed {
-  animation: tile-place 0.35s ease-out;
+  animation: tile-place 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 /* Score popup */
 @keyframes score-popup {
   0% { transform: translateY(0) scale(0.5); opacity: 0; }
-  30% { transform: translateY(-10px) scale(1.2); opacity: 1; }
-  100% { transform: translateY(-30px) scale(1); opacity: 0; }
+  25% { transform: translateY(-12px) scale(1.15); opacity: 1; }
+  100% { transform: translateY(-40px) scale(1); opacity: 0; }
 }
 
 .score-popup {
@@ -69,5 +66,5 @@
   font-weight: 800;
   color: var(--accent-gold);
   pointer-events: none;
-  animation: score-popup 1s ease-out forwards;
+  animation: score-popup 1.2s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
 }

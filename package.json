@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node tests/run-tests.mjs",
+    "test:1": "node -e \"process.env.TEST_RUNS=1; import('fs').then(()=>import('./tests/run-tests.mjs'))\""
   },
   "dependencies": {
     "@kamilmielnik/trie": "^5.0.0",
