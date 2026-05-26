@@ -4,6 +4,7 @@ interface TileProps {
   tile: TileType;
   isSelected?: boolean;
   isDragging?: boolean;
+  justPlaced?: boolean;
   onClick?: () => void;
   onPointerDown?: (e: React.PointerEvent) => void;
   size?: number;
@@ -14,6 +15,7 @@ export function Tile({
   tile,
   isSelected,
   isDragging,
+  justPlaced,
   onClick,
   onPointerDown,
   size = 44,
@@ -21,7 +23,7 @@ export function Tile({
 }: TileProps) {
   return (
     <div
-      className={`tile ${isSelected ? 'selected' : ''} ${isDragging ? 'dragging' : ''}`}
+      className={`tile ${isSelected ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${justPlaced ? 'just-placed' : ''}`}
       style={{
         width: size,
         height: size,

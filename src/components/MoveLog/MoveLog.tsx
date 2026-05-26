@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type { RecordedMove, GameState } from '../../types/GameState';
 
 interface MoveLogProps {
@@ -40,8 +41,10 @@ export function MoveLog({ moveHistory, players }: MoveLogProps) {
             actionClass = 'pass';
           }
 
+          const isNewest = idx === 0;
+
           return (
-            <div key={idx} className={`move-row ${actionClass}`}>
+            <div key={idx} className={`move-row ${actionClass} ${isNewest ? 'new-entry' : ''}`}>
               <span className="move-player">{pName}</span>
               <span className={`move-badge ${actionClass}`}>{actionLabel}</span>
               {actionText && <span className="move-text">{actionText}</span>}

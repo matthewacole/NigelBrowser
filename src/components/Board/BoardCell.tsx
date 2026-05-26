@@ -5,6 +5,9 @@ import { Tile } from '../Tile/Tile';
 interface BoardCellProps {
   square: BoardSquare;
   cellSize: number;
+  tileJustPlaced?: boolean;
+  tileStaggerDelay?: number;
+  dropFlash?: { row: number; col: number; success: boolean } | null;
   isDropTarget?: boolean;
   dropValid?: boolean;
   onClick?: () => void;
@@ -34,6 +37,9 @@ const BONUS_TEXT_COLORS: Record<string, string> = {
 export function BoardCell({
   square,
   cellSize,
+  tileJustPlaced,
+  tileStaggerDelay,
+  dropFlash,
   isDropTarget,
   dropValid,
   onClick,
@@ -52,6 +58,11 @@ export function BoardCell({
 
   const premiumLabel = !hasTile && bonus !== 'normal' && bonusDisplayText(bonus);
   const isPremium = !hasTile && bonus !== 'normal';
+
+  const tileStyle: React.CSSProperties = {};
+  if (tileStaggerDelay !== undefined) {
+    tileStyle.animationDelay = `${tileStaggerDelay}s`;
+  }
 
   return (
     <div
@@ -85,8 +96,12 @@ export function BoardCell({
         <Tile
           tile={square.tile}
           size={cellSize - 2}
-          style={{ borderRadius: 2, boxShadow: 'none' }}
+          justPlaced={tileJustPlaced}
+          style={{ borderRadius: 2, boxShadow: 'none', ...tileStyle }}
         />
+      )}
+      {dropFlash && (
+        <div className={`drop-flash ${dropFlash.success ? 'success' : 'error'}`} />
       )}
     </div>
   );

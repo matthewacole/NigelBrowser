@@ -79,6 +79,11 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   overflow: hidden;
+  transition: background 2s ease-in-out, color 2s ease-in-out;
+}
+
+html {
+  transition: background 2s ease-in-out, color 2s ease-in-out;
 }
 
 .app {
@@ -696,4 +701,350 @@ body {
   margin-bottom: 4px;
   color: var(--text-secondary);
   line-height: 1.5;
+}
+
+/* ========== Mobile Score Bar ========== */
+
+.score-bar {
+  display: none;
+}
+
+/* ========== Mobile Game Board Layout ========== */
+
+.game-board-mobile {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
+}
+
+.board-container-mobile {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 4px;
+}
+
+.action-buttons-mobile {
+  gap: 6px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.action-buttons-mobile .btn {
+  flex: 1;
+  min-height: 44px;
+  font-size: 13px;
+  padding: 10px 8px;
+}
+
+/* ========== Responsive Breakpoints ========== */
+
+@media (max-width: 767px) {
+  .game-board {
+    display: none;
+  }
+
+  .score-bar {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    padding-top: calc(8px + var(--safe-area-top));
+    background: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    position: relative;
+    z-index: 50;
+    min-height: 44px;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .score-bar-players {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+    overflow-x: auto;
+  }
+
+  .score-bar-player {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .score-bar-player.active {
+    background: rgba(124, 58, 237, 0.15);
+  }
+
+  .score-bar-name {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .score-bar-difficulty {
+    font-size: 9px;
+    color: var(--text-muted);
+  }
+
+  .score-bar-value {
+    font-weight: 700;
+    color: var(--accent-gold);
+    font-size: 14px;
+    min-width: 20px;
+    text-align: right;
+  }
+
+  .score-bar-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border-color);
+  }
+
+  .score-bar-turn {
+    font-size: 10px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .score-bar-settings {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 6px;
+    color: var(--text-secondary);
+    min-width: 36px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .score-bar-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--modal-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  .score-bar-dropdown-header {
+    padding: 10px 14px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .score-bar-dropdown-empty {
+    padding: 14px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .score-bar-dropdown-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .score-bar-move-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+
+  .score-bar-move-row.play {
+    background: rgba(34, 197, 94, 0.06);
+  }
+
+  .score-bar-move-player {
+    min-width: 70px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .score-bar-move-badge {
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .score-bar-move-badge.play {
+    background: var(--accent-green);
+    color: white;
+  }
+
+  .score-bar-move-badge.exchange {
+    background: var(--accent-blue);
+    color: white;
+  }
+
+  .score-bar-move-badge.pass {
+    background: var(--text-muted);
+    color: white;
+  }
+
+  .score-bar-move-text {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .modal {
+    min-width: unset;
+    width: 92vw;
+    max-width: 420px;
+  }
+
+  .game-setup {
+    min-width: unset;
+  }
+
+  .game-over {
+    min-width: unset;
+  }
+
+  .menu-logo h1 {
+    font-size: 42px;
+  }
+
+  .menu-cards {
+    min-width: unset;
+    width: 88vw;
+    max-width: 360px;
+  }
+
+  .rack {
+    padding: 8px 10px;
+    margin-top: 8px;
+    min-height: 56px;
+    border-radius: 10px;
+  }
+
+  .rack-tiles {
+    gap: 4px;
+  }
+
+  .tile {
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+
+  .tile:active {
+    transform: scale(0.95);
+  }
+
+  .action-buttons .btn {
+    min-height: 44px;
+    min-width: 44px;
+    font-size: 13px;
+    padding: 10px 12px;
+    flex: 1;
+  }
+
+  .error-banner {
+    max-width: 100%;
+    font-size: 12px;
+    padding: 6px 12px;
+    margin: 4px 8px;
+  }
+
+  .board-grid-wrapper {
+    margin-bottom: 0;
+    transform-origin: center center;
+  }
+
+  .board-container-mobile .board-grid {
+    border-width: 1.5px;
+    border-radius: 6px;
+  }
+
+  .preview-bar {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .board-actions {
+    gap: 8px;
+  }
+
+  .board-actions .btn {
+    min-height: 40px;
+    min-width: 80px;
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .game-sidebar {
+    width: 220px;
+    min-width: 220px;
+  }
+
+  .modal {
+    min-width: unset;
+    width: 80vw;
+    max-width: 500px;
+  }
+
+  .game-setup {
+    min-width: unset;
+  }
+
+  .menu-cards {
+    min-width: unset;
+    width: 70vw;
+    max-width: 400px;
+  }
+
+  .menu-logo h1 {
+    font-size: 52px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .game-board-mobile {
+    display: none;
+  }
+}
+
+/* ========== Touch Target Optimization ========== */
+
+@media (pointer: coarse) {
+  .btn {
+    min-height: 44px;
+  }
+
+  .menu-card {
+    min-height: 56px;
+  }
+
+  .board-cell {
+    cursor: default;
+  }
+
+  .tile {
+    cursor: default;
+  }
 }

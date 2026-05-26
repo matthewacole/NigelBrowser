@@ -32,6 +32,7 @@ export interface UIState {
   turnAnalyses: Record<number, AnalyzedMove[]>;
   savedReportURL: string | null;
   showGameLogPrompt: boolean;
+  lastPlacedTilePositions: { row: number; col: number }[];
 }
 
 export const initialUIState: UIState = {
@@ -46,6 +47,7 @@ export const initialUIState: UIState = {
   turnAnalyses: {},
   savedReportURL: null,
   showGameLogPrompt: false,
+  lastPlacedTilePositions: [],
 };
 
 export type AppState = {
@@ -181,6 +183,8 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
 
       const gameOver = checkGameOver(newGame);
       const nextGame = gameOver ? newGame : advanceTurn(newGame);
+      const tilePositions = move.tiles.map(t => ({ row: t.row, col: t.col }));
+
       if (gameOver) {
         nextGame.phase = 'gameOver';
         const results = calculateFinalScores(nextGame);
@@ -195,6 +199,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
             showGameOver: true,
             winners,
             errorMessage: null,
+            lastPlacedTilePositions: tilePositions,
           },
         };
       }
@@ -207,6 +212,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
           bingoScore,
           lastMoveDescription: desc,
           errorMessage: null,
+          lastPlacedTilePositions: tilePositions,
         },
       };
     }

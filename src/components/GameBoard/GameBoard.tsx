@@ -2,40 +2,64 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Tile as TileType } from '../../types/Tile';
 import type { Move } from '../../types/Move';
 import { useGame } from '../../state/GameContext';
+import { useResponsive } from '../../hooks/useResponsive';
 import { BoardGrid, type BoardGridHandle } from '../Board/BoardGrid';
 import { AppleIntelligenceBorder } from '../Board/AppleIntelligenceBorder';
 import { Rack } from '../Rack/Rack';
 import { Scoreboard } from '../Scoreboard/Scoreboard';
+import { ScoreBar } from '../ScoreBar/ScoreBar';
 import { MoveLog } from '../MoveLog/MoveLog';
 import { ExchangePanel } from '../Exchange/ExchangePanel';
 import { BingoConfetti } from '../Confetti/BingoConfetti';
 import { TileBagView } from '../TileBag/TileBag';
+import { Settings } from '../Settings/Settings';
 import { debugLogger } from '../../utils/DebugLogger';
 
 export function GameBoard() {
   const { state, dispatch, attemptPlay, exchangeTiles, pass: passTurn, forfeit } = useGame();
+  const { isMobile } = useResponsive();
   const [showExchange, setShowExchange] = useState(false);
   const [showTileBag, setShowTileBag] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
   const [animateBingo, setAnimateBingo] = useState(false);
   const [bingoScore, setBingoScore] = useState(0);
   const [placedTileIds, setPlacedTileIds] = useState<string[]>([]);
+  const [aiStaggerMap, setAiStaggerMap] = useState<Map<string, number>>(new Map());
   const boardGridRef = useRef<BoardGridHandle>(null);
 
   const currentPlayer = state.game.players[state.game.currentPlayerIndex];
   const isAIThinking = state.game.players[state.game.currentPlayerIndex]?.type === 'computer';
 
   const visibleRack = (currentPlayer?.rack ?? []).filter(t => !placedTileIds.includes(t.id));
-  const prevMoveCount = state.game.moveHistory.length;
 
   useEffect(() => {
-    if (prevMoveCount > 0 && state.ui.showBingoConfetti) {
+    if (state.ui.showBingoConfetti) {
       setAnimateBingo(true);
       setBingoScore(state.ui.bingoScore);
-      const timer = setTimeout(() => setAnimateBingo(false), 3500);
+      const timer = setTimeout(() => setAnimateBingo(false), 4500);
       return () => clearTimeout(timer);
     }
   }, [state.ui.showBingoConfetti, state.ui.bingoScore]);
+
+  // AI staggered tile placement
+  useEffect(() => {
+    const positions = state.ui.lastPlacedTilePositions;
+    if (positions.length > 0) {
+      const lastMove = state.game.moveHistory[state.game.moveHistory.length - 1];
+      const lastPlayer = lastMove ? state.game.players[lastMove.playerIndex] : null;
+      if (lastPlayer?.type === 'computer') {
+        const stagger = new Map<string, number>();
+        positions.forEach((pos, i) => {
+          stagger.set(`${pos.row},${pos.col}`, i * 0.4);
+        });
+        setAiStaggerMap(stagger);
+        const maxDelay = positions.length * 400 + 100;
+        const timer = setTimeout(() => setAiStaggerMap(new Map()), maxDelay);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [state.game.moveHistory.length, state.ui.lastPlacedTilePositions, state.game.players]);
 
   const handleCommitMove = useCallback((move: Move) => {
     attemptPlay(move);
@@ -96,6 +120,104 @@ export function GameBoard() {
 
   if (state.game.phase !== 'playing') return null;
 
+  // Mobile layout
+  if (isMobile) {
+    return (
+      <div className="game-board-mobile">
+        <ScoreBar
+          players={state.game.players}
+          currentPlayerIndex={state.game.currentPlayerIndex}
+          turnNumber={state.game.turnNumber}
+          moveHistory={state.game.moveHistory}
+          onSettingsClick={() => setShowSettings(true)}
+        />
+
+        {state.ui.errorMessage && (
+          <div className="error-banner">{state.ui.errorMessage}</div>
+        )}
+
+        <div className="board-container-mobile">
+          <BoardGrid
+            ref={boardGridRef}
+            board={state.game.board}
+            onCommitMove={handleCommitMove}
+            rackTiles={visibleRack}
+            onRecallTiles={handleRecallTiles}
+            onPlacedTilesChange={handlePlacedTilesChange}
+            readOnly={isAIThinking}
+            aiStaggerMap={aiStaggerMap}
+          />
+          {isAIThinking && <AppleIntelligenceBorder isBingoMode={state.ui.showBingoConfetti} />}
+        </div>
+
+        {showExchange ? (
+          <ExchangePanel
+            rack={currentPlayer?.rack ?? []}
+            onExchange={handleExchangeConfirm}
+            onCancel={() => setShowExchange(false)}
+            bagCount={state.game.bag.count}
+          />
+        ) : (
+          <>
+            <Rack
+              tiles={visibleRack}
+              selectedTileId={selectedTileId}
+              onTileClick={handleRackTileClick}
+              onTilePointerDown={handleRackTilePointerDown}
+            />
+
+            <div className="action-buttons action-buttons-mobile">
+              <button
+                className="btn btn-secondary"
+                disabled={state.game.bag.count === 0 || isAIThinking}
+                onClick={() => setShowExchange(true)}
+              >
+                Exchange
+              </button>
+              <button
+                className="btn btn-ghost"
+                disabled={isAIThinking}
+                onClick={passTurn}
+              >
+                Pass
+              </button>
+              <button
+                className="btn btn-ghost"
+                disabled={isAIThinking}
+                onClick={handleShuffle}
+              >
+                Shuffle
+              </button>
+              <button
+                className="btn btn-danger"
+                disabled={isAIThinking}
+                onClick={forfeit}
+              >
+                Forfeit
+              </button>
+            </div>
+          </>
+        )}
+
+        {showTileBag && (
+          <div className="modal-overlay" onClick={() => setShowTileBag(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <TileBagView bag={state.game.bag} />
+              <button className="btn btn-secondary" onClick={() => setShowTileBag(false)}>Close</button>
+            </div>
+          </div>
+        )}
+
+        {showSettings && (
+          <Settings onClose={() => setShowSettings(false)} />
+        )}
+
+        {animateBingo && <BingoConfetti score={bingoScore} onDone={() => setAnimateBingo(false)} />}
+      </div>
+    );
+  }
+
+  // Desktop layout (unchanged)
   return (
     <div className="game-board">
       <div className="game-sidebar">
@@ -126,9 +248,9 @@ export function GameBoard() {
             onRecallTiles={handleRecallTiles}
             onPlacedTilesChange={handlePlacedTilesChange}
             readOnly={isAIThinking}
+            aiStaggerMap={aiStaggerMap}
           />
-
-          {isAIThinking && <AppleIntelligenceBorder />}
+          {isAIThinking && <AppleIntelligenceBorder isBingoMode={state.ui.showBingoConfetti} />}
         </div>
 
         {showExchange ? (
@@ -188,6 +310,10 @@ export function GameBoard() {
             <button className="btn btn-secondary" onClick={() => setShowTileBag(false)}>Close</button>
           </div>
         </div>
+      )}
+
+      {showSettings && (
+        <Settings onClose={() => setShowSettings(false)} />
       )}
 
       {animateBingo && <BingoConfetti score={bingoScore} onDone={() => setAnimateBingo(false)} />}

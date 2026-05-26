@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useGame } from '../../state/GameContext';
 import { GameSetup } from './GameSetup';
 import { wordValidator } from '../../engine/WordValidator';
+import { FallingTiles } from './FallingTiles';
 import type { Player } from '../../types/Player';
 
 const TAGLINES = [
@@ -37,7 +38,7 @@ export function MainMenu() {
 
   return (
     <div className="main-menu">
-      <div className="falling-tiles-bg" />
+      <FallingTiles />
 
       <div className="menu-content">
         <div className="menu-logo">
