@@ -116,8 +116,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
       );
 
       if (!result.found || !result.word || result.score === undefined) {
-        debugLogger.log(s.game.turnNumber, currentPlayer.name, 'AI', `AI found no valid moves at ${effectiveDifficulty} difficulty — passing`);
-        dispatch({ type: 'PASS' });
+        const bagCount = s.game.bag.count;
+        const rackSize = currentPlayer.rack.length;
+        if (bagCount > 0 && rackSize > 0) {
+          const exchangeCount = Math.min(rackSize, bagCount, 7);
+          const shuffled = [...currentPlayer.rack].sort(() => Math.random() - 0.5);
+          const tileIds = shuffled.slice(0, exchangeCount).map(t => t.id);
+          debugLogger.log(s.game.turnNumber, currentPlayer.name, 'AI', `AI found no moves — exchanging ${tileIds.length} tiles`);
+          dispatch({ type: 'EXCHANGE_TILES', tileIds });
+        } else {
+          debugLogger.log(s.game.turnNumber, currentPlayer.name, 'AI', `AI found no valid moves at ${effectiveDifficulty} difficulty — passing`);
+          dispatch({ type: 'PASS' });
+        }
         return;
       }
 
@@ -125,18 +135,19 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       const placements: { tile: import('../types/Tile').Tile; row: number; col: number }[] = [];
       const chars = result.word.split('');
-      const rack = s.game.players[s.game.currentPlayerIndex].rack;
+      const rackCopy = [...s.game.players[s.game.currentPlayerIndex].rack];
       for (let i = 0; i < chars.length; i++) {
         const r = result.horizontal ? result.row! : result.row! + i;
         const c = result.horizontal ? result.col! + i : result.col!;
         if (s.game.board[r][c].tile !== null) continue;
-        const tileIdx = rack.findIndex(t => t.letter === chars[i]);
+        const tileIdx = rackCopy.findIndex(t => t.letter === chars[i]);
         if (tileIdx === -1) {
           debugLogger.log(s.game.turnNumber, currentPlayer.name, 'ERROR', `AI rack missing letter '${chars[i]}' for word '${result.word}'`);
           dispatch({ type: 'PASS' });
           return;
         }
-        placements.push({ tile: rack[tileIdx], row: r, col: c });
+        placements.push({ tile: rackCopy[tileIdx], row: r, col: c });
+        rackCopy.splice(tileIdx, 1);
       }
 
       if (placements.length === 0) {

@@ -40,7 +40,7 @@ export class SolverManager {
       const text = await response.text();
       const words = text.split(/\r?\n/).map(w => w.trim().toLowerCase()).filter(w => w.length > 0);
 
-      this.trie = TrieModule.fromArray(words);
+      this.trie = TrieModule.Trie.fromArray(words);
       this.config = configsModule.languages.englishUsScrabble;
       this.ready = true;
       console.log(`[Solver] Ready: ${words.length} words`);

@@ -97,20 +97,30 @@ export class GameSimulationRunner {
       );
 
       if (!result.found || !result.word || result.score === undefined) {
-        this.dispatch({ type: 'PASS' });
-        this.recordTurn('pass', 0, '');
+        const bagCount = this.state.game.bag.count;
+        const rackSize = currentPlayer.rack.length;
+        if (bagCount > 0 && rackSize > 0) {
+          const exchangeCount = Math.min(rackSize, bagCount, 7);
+          const shuffled = [...currentPlayer.rack].sort(() => Math.random() - 0.5);
+          const tileIds = shuffled.slice(0, exchangeCount).map(t => t.id);
+          this.dispatch({ type: 'EXCHANGE_TILES', tileIds });
+          this.recordTurn('exchange', 0, `exchanged ${tileIds.length} tiles`);
+        } else {
+          this.dispatch({ type: 'PASS' });
+          this.recordTurn('pass', 0, '');
+        }
         this.callbacks.onStateChange?.(this.state);
         return this.state.game.phase === 'playing';
       }
 
       const placements: { tile: import('../types/Tile').Tile; row: number; col: number }[] = [];
       const chars = result.word.split('');
-      const rack = this.state.game.players[this.state.game.currentPlayerIndex].rack;
+      const rackCopy = [...this.state.game.players[this.state.game.currentPlayerIndex].rack];
       for (let i = 0; i < chars.length; i++) {
         const r = result.horizontal ? result.row! : result.row! + i;
         const c = result.horizontal ? result.col! + i : result.col!;
         if (this.state.game.board[r][c].tile !== null) continue;
-        const tileIdx = rack.findIndex(t => t.letter === chars[i]);
+        const tileIdx = rackCopy.findIndex(t => t.letter === chars[i]);
         if (tileIdx === -1) {
           this.callbacks.onError?.(`AI rack missing letter '${chars[i]}' for word '${result.word}'`);
           this.dispatch({ type: 'PASS' });
@@ -118,7 +128,8 @@ export class GameSimulationRunner {
           this.callbacks.onStateChange?.(this.state);
           return this.state.game.phase === 'playing';
         }
-        placements.push({ tile: rack[tileIdx], row: r, col: c });
+        placements.push({ tile: rackCopy[tileIdx], row: r, col: c });
+        rackCopy.splice(tileIdx, 1);
       }
 
       if (placements.length === 0) {
