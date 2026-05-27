@@ -7,6 +7,12 @@ import { RACK_SIZE } from '../types/Constants';
 import { createStandardBoard } from '../types/BoardSquare';
 import { debugLogger } from '../utils/DebugLogger';
 
+function cloneGameState(state: GameState): GameState {
+  const clone = structuredClone(state);
+  clone.bag = TileBag.fromJSON((clone.bag as any)._tiles || []);
+  return clone;
+}
+
 export type GameAction =
   | { type: 'NEW_GAME'; players: Player[] }
   | { type: 'LOAD_GAME'; state: GameState }
@@ -17,6 +23,7 @@ export type GameAction =
   | { type: 'SHUFFLE_RACK' }
   | { type: 'FINISH_GAME' }
   | { type: 'CHECK_GAME_OVER' }
+  | { type: 'SET_ERROR'; message: string }
   | { type: 'SET_ANALYSIS'; turn: number; moves: AnalyzedMove[] }
   | { type: 'CLEAR_GAME' };
 
@@ -32,6 +39,7 @@ export interface UIState {
   turnAnalyses: Record<number, AnalyzedMove[]>;
   savedReportURL: string | null;
   showGameLogPrompt: boolean;
+  lastPlacedTilePositions: { row: number; col: number }[];
 }
 
 export const initialUIState: UIState = {
@@ -46,6 +54,7 @@ export const initialUIState: UIState = {
   turnAnalyses: {},
   savedReportURL: null,
   showGameLogPrompt: false,
+  lastPlacedTilePositions: [],
 };
 
 export type AppState = {
@@ -58,14 +67,8 @@ export const initialAppState: AppState = {
   ui: initialUIState,
 };
 
-function cloneGame(state: GameState): GameState {
-  const cloned = structuredClone(state);
-  cloned.bag = TileBag.fromJSON((cloned.bag as any)._tiles || (cloned.bag as any).tiles || []);
-  return cloned;
-}
-
 function advanceTurn(state: GameState): GameState {
-  const newState = cloneGame(state);
+  const newState = cloneGameState(state);
   newState.currentPlayerIndex = (newState.currentPlayerIndex + 1) % newState.players.length;
   if (newState.currentPlayerIndex === 0) {
     newState.turnNumber += 1;
@@ -132,7 +135,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
     }
 
     case 'COMMIT_MOVE': {
-      const newGame = cloneGame(state.game);
+      const newGame = cloneGameState(state.game);
       const playerIndex = newGame.currentPlayerIndex;
       const player = newGame.players[playerIndex];
       const move = action.move;
@@ -181,12 +184,22 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
 
       debugLogger.log(newGame.turnNumber, player.name, 'COMMIT', `${player.name} committed ${move.wordsFormed.join(', ')} for ${move.score} pts`, { words: move.wordsFormed.join(', '), score: move.score, tiles_used: tilesUsed, tiles_drawn: drawn.length, player_score: player.score, bag_remaining: newGame.bag.count });
 
+      for (const pt of move.tiles) {
+        const bonus = newGame.board[pt.row][pt.col].bonus;
+        debugLogger.log(newGame.turnNumber, player.name, 'PLACE',
+          `Placed ${pt.tile.letter} at (${pt.row},${pt.col}) [base: ${pt.tile.score}, bonus: ${bonus}]`,
+          { letter: pt.tile.letter, row: pt.row, col: pt.col, tile_score: pt.tile.score, bonus_square: bonus }
+        );
+      }
+
       if (isBingo) {
         debugLogger.log(newGame.turnNumber, player.name, 'BINGO', `${player.name} scored a BINGO! +${move.score} pts`);
       }
 
       const gameOver = checkGameOver(newGame);
       const nextGame = gameOver ? newGame : advanceTurn(newGame);
+      const tilePositions = move.tiles.map(t => ({ row: t.row, col: t.col }));
+
       if (gameOver) {
         nextGame.phase = 'gameOver';
         const results = calculateFinalScores(nextGame);
@@ -201,6 +214,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
             showGameOver: true,
             winners,
             errorMessage: null,
+            lastPlacedTilePositions: tilePositions,
           },
         };
       }
@@ -213,12 +227,13 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
           bingoScore,
           lastMoveDescription: desc,
           errorMessage: null,
+          lastPlacedTilePositions: tilePositions,
         },
       };
     }
 
     case 'EXCHANGE_TILES': {
-      let newGame = cloneGame(state.game);
+      let newGame = cloneGameState(state.game);
       const playerIndex = newGame.currentPlayerIndex;
       const player = newGame.players[playerIndex];
 
@@ -256,7 +271,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
     }
 
     case 'PASS': {
-      let newGame = cloneGame(state.game);
+      let newGame = cloneGameState(state.game);
       const playerIndex = newGame.currentPlayerIndex;
       newGame.players[playerIndex].consecutivePasses += 1;
 
@@ -290,7 +305,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
     }
 
     case 'FORFEIT': {
-      const newGame = cloneGame(state.game);
+      const newGame = cloneGameState(state.game);
       debugLogger.log(newGame.turnNumber, newGame.players[newGame.currentPlayerIndex]?.name ?? '?', 'FORFEIT', `${newGame.players[newGame.currentPlayerIndex]?.name ?? 'Player'} forfeited the game`);
       newGame.phase = 'gameOver';
       const results = calculateFinalScores(newGame);
@@ -302,7 +317,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
     }
 
     case 'SHUFFLE_RACK': {
-      const newGame = cloneGame(state.game);
+      const newGame = cloneGameState(state.game);
       const player = newGame.players[newGame.currentPlayerIndex];
       for (let i = player.rack.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -312,7 +327,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
     }
 
     case 'FINISH_GAME': {
-      const newGame = cloneGame(state.game);
+      const newGame = cloneGameState(state.game);
       newGame.phase = 'gameOver';
       const results = calculateFinalScores(newGame);
       const winners = results.map(r => ({ player: r.player, finalScore: r.finalScore })).sort((a, b) => b.finalScore - a.finalScore);
@@ -337,6 +352,10 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
           turnAnalyses: { ...state.ui.turnAnalyses, [action.turn]: action.moves },
         },
       };
+    }
+
+    case 'SET_ERROR': {
+      return { ...state, ui: { ...state.ui, errorMessage: action.message } };
     }
 
     case 'CLEAR_GAME': {

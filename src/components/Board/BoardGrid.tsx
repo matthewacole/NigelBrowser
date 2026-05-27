@@ -3,9 +3,8 @@ import type { BoardSquare } from '../../types/BoardSquare';
 import type { Tile as TileType } from '../../types/Tile';
 import type { Move } from '../../types/Move';
 import { BOARD_SIZE } from '../../types/Constants';
-import { boardSquareSize } from '../../styles/board';
+import { getBoardSquareSize } from '../../styles/board';
 import { BoardCell } from './BoardCell';
-import { Tile } from '../Tile/Tile';
 import { validatePlacement, calculateScore } from '../../engine/GameEngine';
 import { wordValidator } from '../../engine/WordValidator';
 
@@ -16,6 +15,9 @@ interface BoardGridProps {
   onRecallTiles: (tiles: { tile: TileType; row: number; col: number }[]) => void;
   onPlacedTilesChange?: (placedTileIds: string[]) => void;
   readOnly?: boolean;
+  aiStaggerMap?: Map<string, number>;
+  sidebarWidth?: number;
+  padding?: number;
 }
 
 export interface BoardGridHandle {
@@ -50,14 +52,33 @@ const EMPTY_DRAG: DragState = {
 };
 
 export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function BoardGrid({
-  board, onCommitMove, rackTiles, onRecallTiles, readOnly, onPlacedTilesChange
+  board, onCommitMove, rackTiles, onRecallTiles, readOnly, onPlacedTilesChange, aiStaggerMap,
+  sidebarWidth = 0, padding = 32,
 }, ref) {
   const [drag, setDrag] = useState<DragState>(EMPTY_DRAG);
   const [placedTiles, setPlacedTiles] = useState<Map<string, { tile: TileType; row: number; col: number }>>(new Map());
+  const [justPlacedIds, setJustPlacedIds] = useState<Set<string>>(new Set());
+  const [dropFlash, setDropFlash] = useState<{ row: number; col: number; success: boolean } | null>(null);
+  const calcCellSize = useCallback(() => {
+    return getBoardSquareSize(window.innerWidth, sidebarWidth, padding);
+  }, [sidebarWidth, padding]);
+
+  const [cellSize, setCellSize] = useState(calcCellSize);
   const boardRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState>(EMPTY_DRAG);
   const placedRef = useRef<Map<string, { tile: TileType; row: number; col: number }>>(new Map());
-  const cellSize = boardSquareSize;
+
+  useEffect(() => {
+    const handleResize = () => {
+      setCellSize(calcCellSize());
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [calcCellSize]);
+
+  useEffect(() => {
+    setCellSize(calcCellSize());
+  }, [calcCellSize]);
 
   dragRef.current = drag;
   placedRef.current = placedTiles;
@@ -156,6 +177,14 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
             placedRef.current = next;
             return next;
           });
+          setJustPlacedIds(prev => new Set(prev).add(d.tile!.id));
+          setTimeout(() => {
+            setJustPlacedIds(prev => {
+              const next = new Set(prev);
+              next.delete(d.tile!.id);
+              return next;
+            });
+          }, 400);
         } else {
           setPlacedTiles(prev => {
             const next = new Map(prev);
@@ -165,6 +194,8 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
             return next;
           });
         }
+        setDropFlash({ row: cell.row, col: cell.col, success: true });
+        setTimeout(() => setDropFlash(null), 300);
       } else if (!d.fromRack && cell === null) {
         setPlacedTiles(prev => {
           const next = new Map(prev);
@@ -176,6 +207,11 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
           }
           return next;
         });
+        setDropFlash({ row: d.fromRow, col: d.fromCol, success: false });
+        setTimeout(() => setDropFlash(null), 300);
+      } else if (cell && isBoardSquareOccupied(cell.row, cell.col)) {
+        setDropFlash({ row: cell.row, col: cell.col, success: false });
+        setTimeout(() => setDropFlash(null), 300);
       }
 
       setDrag(EMPTY_DRAG);
@@ -305,8 +341,12 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
     </div>
   ) : null;
 
+  if (!board || board.length === 0) {
+    return <div className="board-grid-wrapper" style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>Board unavailable</div>;
+  }
+
   return (
-    <div className="board-grid-wrapper" style={{ position: 'relative' }}>
+    <div className="board-grid-wrapper" style={{ position: 'relative', marginBottom: readOnly ? 0 : undefined }}>
       <div
         ref={boardRef}
         className="board-grid"
@@ -319,26 +359,38 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
         }}
       >
         {board.map((row, ri) =>
-          row.map((square, ci) => (
-            <BoardCell
-              key={square.id}
-              square={{
-                ...square,
-                tile: placedTiles.has(`${ri},${ci}`) ? placedTiles.get(`${ri},${ci}`)!.tile : square.tile,
-              }}
-              cellSize={cellSize}
-              isDropTarget={drag.active && drag.currentRow === ri && drag.currentCol === ci}
-              dropValid={!isBoardSquareOccupied(ri, ci)}
-              onClick={() => handleCellClick(ri, ci)}
-              onPointerDown={(e) => handleBoardPointerDown(ri, ci, e)}
-            />
-          ))
+          row.map((square, ci) => {
+            const placedKey = `${ri},${ci}`;
+            const placed = placedTiles.get(placedKey);
+            const tile = placed ? placed.tile : square.tile;
+            const isJustPlaced = placed && justPlacedIds.has(placed.tile.id);
+            const showFlash: { row: number; col: number; success: boolean } | null = dropFlash !== null && dropFlash.row === ri && dropFlash.col === ci ? dropFlash : null;
+            const staggerDelay = aiStaggerMap?.get(`${ri},${ci}`);
+
+            return (
+              <BoardCell
+                key={square.id}
+                square={{
+                  ...square,
+                  tile: placed ? placed.tile : square.tile,
+                }}
+                cellSize={cellSize}
+                tileJustPlaced={isJustPlaced}
+                tileStaggerDelay={staggerDelay}
+                dropFlash={showFlash}
+                isDropTarget={drag.active && drag.currentRow === ri && drag.currentCol === ci}
+                dropValid={!isBoardSquareOccupied(ri, ci)}
+                onClick={() => handleCellClick(ri, ci)}
+                onPointerDown={(e) => handleBoardPointerDown(ri, ci, e)}
+              />
+            );
+          })
         )}
       </div>
 
       {dragTile}
 
-      {preview && (
+      {!readOnly && preview && (
         <div className={`preview-bar ${preview.valid ? 'valid' : 'invalid'}`}>
           {preview.valid ? (
             <span>✓ {preview.words?.map(w => `${w.word} (${w.score})`).join(', ')} — {preview.score} pts</span>
@@ -348,14 +400,16 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
         </div>
       )}
 
-      <div className="board-actions">
-        <button className="btn btn-primary" disabled={!preview?.valid} onClick={handlePlay}>
-          Play
-        </button>
-        <button className="btn btn-secondary" disabled={placedTiles.size === 0} onClick={handleRecall}>
-          Recall
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="board-actions">
+          <button className="btn btn-primary" disabled={!preview?.valid} onClick={handlePlay}>
+            Play
+          </button>
+          <button className="btn btn-secondary" disabled={placedTiles.size === 0} onClick={handleRecall}>
+            Recall
+          </button>
+        </div>
+      )}
     </div>
   );
 });

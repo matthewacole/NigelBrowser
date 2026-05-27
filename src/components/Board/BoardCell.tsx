@@ -5,6 +5,9 @@ import { Tile } from '../Tile/Tile';
 interface BoardCellProps {
   square: BoardSquare;
   cellSize: number;
+  tileJustPlaced?: boolean;
+  tileStaggerDelay?: number;
+  dropFlash?: { row: number; col: number; success: boolean } | null;
   isDropTarget?: boolean;
   dropValid?: boolean;
   onClick?: () => void;
@@ -14,26 +17,29 @@ interface BoardCellProps {
 }
 
 const BONUS_COLORS: Record<string, string> = {
-  tripleWord: 'rgba(255, 59, 48, 0.25)',
-  doubleWord: 'rgba(255, 159, 10, 0.2)',
-  tripleLetter: 'rgba(74, 158, 255, 0.25)',
-  doubleLetter: 'rgba(74, 158, 255, 0.15)',
-  center: 'rgba(255, 159, 10, 0.25)',
+  tripleWord: '#FF3B30',
+  doubleWord: '#FF9500',
+  tripleLetter: '#007AFF',
+  doubleLetter: '#59ABE6',
+  center: '#FF9500',
   normal: 'transparent',
 };
 
 const BONUS_TEXT_COLORS: Record<string, string> = {
-  tripleWord: '#ff6659',
-  doubleWord: '#ffb340',
-  tripleLetter: '#6bb3ff',
-  doubleLetter: '#8ec4ff',
-  center: '#ffb340',
+  tripleWord: '#fff',
+  doubleWord: '#fff',
+  tripleLetter: '#fff',
+  doubleLetter: '#fff',
+  center: '#fff',
   normal: 'transparent',
 };
 
 export function BoardCell({
   square,
   cellSize,
+  tileJustPlaced,
+  tileStaggerDelay,
+  dropFlash,
   isDropTarget,
   dropValid,
   onClick,
@@ -53,6 +59,11 @@ export function BoardCell({
   const premiumLabel = !hasTile && bonus !== 'normal' && bonusDisplayText(bonus);
   const isPremium = !hasTile && bonus !== 'normal';
 
+  const tileStyle: React.CSSProperties = {};
+  if (tileStaggerDelay !== undefined) {
+    tileStyle.animationDelay = `${tileStaggerDelay}s`;
+  }
+
   return (
     <div
       className={className}
@@ -61,7 +72,7 @@ export function BoardCell({
         height: cellSize,
         backgroundColor: bgColor,
         position: 'relative',
-        borderRadius: isPremium ? 3 : 0,
+        borderRadius: isPremium ? 2 : 0,
       }}
       onClick={onClick}
       onPointerDown={onPointerDown}
@@ -85,8 +96,12 @@ export function BoardCell({
         <Tile
           tile={square.tile}
           size={cellSize - 2}
-          style={{ borderRadius: 2, boxShadow: 'none' }}
+          justPlaced={tileJustPlaced}
+          style={{ borderRadius: 2, boxShadow: 'none', ...tileStyle }}
         />
+      )}
+      {dropFlash && (
+        <div className={`drop-flash ${dropFlash.success ? 'success' : 'error'}`} />
       )}
     </div>
   );

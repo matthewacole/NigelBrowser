@@ -40,7 +40,7 @@ export class SolverManager {
       const text = await response.text();
       const words = text.split(/\r?\n/).map(w => w.trim().toLowerCase()).filter(w => w.length > 0);
 
-      this.trie = TrieModule.fromArray(words);
+      this.trie = TrieModule.Trie.fromArray(words);
       this.config = configsModule.languages.englishUsScrabble;
       this.ready = true;
       console.log(`[Solver] Ready: ${words.length} words`);
@@ -99,7 +99,8 @@ export class SolverManager {
     try {
       const moves = await this._getAllMoves(board, rack);
       return moves.sort((a, b) => a.score - b.score);
-    } catch {
+    } catch (e) {
+      console.error('[Solver] Analysis failed:', e);
       return [];
     }
   }

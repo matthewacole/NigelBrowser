@@ -7,6 +7,8 @@ import { solverManager } from '../solver/SolverManager';
 import { saveGame, loadGame, hasSavedGame, deleteSavedGame } from '../utils/persistence';
 import { generateReport, downloadReport } from '../utils/reportGenerator';
 import { debugLogger } from '../utils/DebugLogger';
+import { validatePlacement } from '../engine/GameEngine';
+import { wordValidator } from '../engine/WordValidator';
 
 interface GameContextValue {
   state: AppState;
@@ -116,8 +118,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
       );
 
       if (!result.found || !result.word || result.score === undefined) {
-        debugLogger.log(s.game.turnNumber, currentPlayer.name, 'AI', `AI found no valid moves at ${effectiveDifficulty} difficulty — passing`);
-        dispatch({ type: 'PASS' });
+        const bagCount = s.game.bag.count;
+        const rackSize = currentPlayer.rack.length;
+        if (bagCount > 0 && rackSize > 0) {
+          const exchangeCount = Math.min(rackSize, bagCount, 7);
+          const shuffled = [...currentPlayer.rack].sort(() => Math.random() - 0.5);
+          const tileIds = shuffled.slice(0, exchangeCount).map(t => t.id);
+          debugLogger.log(s.game.turnNumber, currentPlayer.name, 'AI', `AI found no moves — exchanging ${tileIds.length} tiles`);
+          dispatch({ type: 'EXCHANGE_TILES', tileIds });
+        } else {
+          debugLogger.log(s.game.turnNumber, currentPlayer.name, 'AI', `AI found no valid moves at ${effectiveDifficulty} difficulty — passing`);
+          dispatch({ type: 'PASS' });
+        }
         return;
       }
 
@@ -125,21 +137,49 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       const placements: { tile: import('../types/Tile').Tile; row: number; col: number }[] = [];
       const chars = result.word.split('');
-      const rack = s.game.players[s.game.currentPlayerIndex].rack;
+      const rackCopy = [...s.game.players[s.game.currentPlayerIndex].rack];
       for (let i = 0; i < chars.length; i++) {
         const r = result.horizontal ? result.row! : result.row! + i;
         const c = result.horizontal ? result.col! + i : result.col!;
         if (s.game.board[r][c].tile !== null) continue;
-        const tileIdx = rack.findIndex(t => t.letter === chars[i]);
+        const tileIdx = rackCopy.findIndex(t => t.letter === chars[i]);
         if (tileIdx === -1) {
           debugLogger.log(s.game.turnNumber, currentPlayer.name, 'ERROR', `AI rack missing letter '${chars[i]}' for word '${result.word}'`);
           dispatch({ type: 'PASS' });
           return;
         }
-        placements.push({ tile: rack[tileIdx], row: r, col: c });
+        placements.push({ tile: rackCopy[tileIdx], row: r, col: c });
+        rackCopy.splice(tileIdx, 1);
       }
 
       if (placements.length === 0) {
+        dispatch({ type: 'PASS' });
+        return;
+      }
+
+      const validation = validatePlacement(
+        placements.map(p => ({ tile: p.tile, row: p.row, col: p.col })),
+        s.game.board
+      );
+
+      if (!validation.valid) {
+        debugLogger.log(s.game.turnNumber, currentPlayer.name, 'ERROR',
+          `AI move '${result.word}' failed placement validation: ${validation.error}`);
+        dispatch({ type: 'PASS' });
+        return;
+      }
+
+      const wordStrings = validation.words!.map(w =>
+        w.positions.map(p => {
+          const placed = placements.find(t => t.row === p.row && t.col === p.col);
+          return placed ? placed.tile.letter : (s.game.board[p.row][p.col].tile?.letter ?? '');
+        }).join('')
+      );
+
+      const { valid: allWordsValid, invalidWords } = wordValidator.validateWords(wordStrings);
+      if (!allWordsValid) {
+        debugLogger.log(s.game.turnNumber, currentPlayer.name, 'ERROR',
+          `AI move '${result.word}' creates invalid word(s): ${invalidWords.join(', ')}`);
         dispatch({ type: 'PASS' });
         return;
       }
@@ -149,7 +189,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         tiles: placements.map(p => ({ tile: p.tile, row: p.row, col: p.col })),
         direction: result.horizontal ? 'horizontal' : 'vertical',
         score: result.score,
-        wordsFormed: [result.word],
+        wordsFormed: wordStrings,
         isBingo,
         startRow: Math.min(...placements.map(p => p.row)),
         startCol: Math.min(...placements.map(p => p.col)),
@@ -164,6 +204,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       };
 
       dispatch({ type: 'COMMIT_MOVE', move });
+    } catch (e) {
+      const s = stateRef.current;
+      const currentPlayer = s.game.players[s.game.currentPlayerIndex];
+      const msg = e instanceof Error ? e.message : String(e);
+      debugLogger.error(s.game.turnNumber, currentPlayer?.name ?? '?', `AI move error: ${msg}`);
+      dispatch({ type: 'SET_ERROR', message: `AI error: ${msg}` });
     } finally {
       isAIThinkingRef.current = false;
     }
