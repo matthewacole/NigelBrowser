@@ -7,6 +7,8 @@ import { solverManager } from '../solver/SolverManager';
 import { saveGame, loadGame, hasSavedGame, deleteSavedGame } from '../utils/persistence';
 import { generateReport, downloadReport } from '../utils/reportGenerator';
 import { debugLogger } from '../utils/DebugLogger';
+import { validatePlacement } from '../engine/GameEngine';
+import { wordValidator } from '../engine/WordValidator';
 
 interface GameContextValue {
   state: AppState;
@@ -155,12 +157,39 @@ export function GameProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      const validation = validatePlacement(
+        placements.map(p => ({ tile: p.tile, row: p.row, col: p.col })),
+        s.game.board
+      );
+
+      if (!validation.valid) {
+        debugLogger.log(s.game.turnNumber, currentPlayer.name, 'ERROR',
+          `AI move '${result.word}' failed placement validation: ${validation.error}`);
+        dispatch({ type: 'PASS' });
+        return;
+      }
+
+      const wordStrings = validation.words!.map(w =>
+        w.positions.map(p => {
+          const placed = placements.find(t => t.row === p.row && t.col === p.col);
+          return placed ? placed.tile.letter : (s.game.board[p.row][p.col].tile?.letter ?? '');
+        }).join('')
+      );
+
+      const { valid: allWordsValid, invalidWords } = wordValidator.validateWords(wordStrings);
+      if (!allWordsValid) {
+        debugLogger.log(s.game.turnNumber, currentPlayer.name, 'ERROR',
+          `AI move '${result.word}' creates invalid word(s): ${invalidWords.join(', ')}`);
+        dispatch({ type: 'PASS' });
+        return;
+      }
+
       const isBingo = placements.length === 7;
       const move: Move = {
         tiles: placements.map(p => ({ tile: p.tile, row: p.row, col: p.col })),
         direction: result.horizontal ? 'horizontal' : 'vertical',
         score: result.score,
-        wordsFormed: [result.word],
+        wordsFormed: wordStrings,
         isBingo,
         startRow: Math.min(...placements.map(p => p.row)),
         startCol: Math.min(...placements.map(p => p.col)),
