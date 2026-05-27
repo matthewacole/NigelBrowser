@@ -347,7 +347,7 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
   }
 
   return (
-    <div className="board-grid-wrapper" style={{ position: 'relative', marginBottom: readOnly ? 0 : undefined, transform: boardTransform }}>
+    <div className="board-grid-wrapper" style={{ position: 'relative', marginBottom: readOnly ? 0 : undefined }}>
       <div
         ref={boardRef}
         className="board-grid"
@@ -357,6 +357,8 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
           gridTemplateRows: `repeat(${BOARD_SIZE}, ${cellSize}px)`,
           gap: 0,
           position: 'relative',
+          transform: boardTransform,
+          transformOrigin: 'center center',
         }}
       >
         {board.map((row, ri) =>
