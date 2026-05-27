@@ -1,6 +1,6 @@
 .tile {
-  background: linear-gradient(180deg, #FAF5E8 0%, #F0E8D0 100%);
-  color: #1D1D1F;
+  background: var(--tile-bg);
+  color: var(--tile-text);
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -50,7 +50,7 @@
   right: 3px;
   font-size: 9px;
   font-weight: 700;
-  opacity: 0.6;
+  opacity: 0.8;
   line-height: 1;
 }
 
@@ -78,7 +78,7 @@
 }
 
 .drag-preview.tile {
-  background: linear-gradient(180deg, #FAF5E8 0%, #F0E8D0 100%);
+  background: var(--tile-bg);
   border-radius: 4px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   display: flex;
@@ -98,5 +98,5 @@
   right: 4px;
   font-size: 10px;
   font-weight: 700;
-  opacity: 0.6;
+  opacity: 0.8;
 }

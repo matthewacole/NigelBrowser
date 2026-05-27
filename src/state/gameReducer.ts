@@ -17,6 +17,7 @@ export type GameAction =
   | { type: 'SHUFFLE_RACK' }
   | { type: 'FINISH_GAME' }
   | { type: 'CHECK_GAME_OVER' }
+  | { type: 'SET_ERROR'; message: string }
   | { type: 'SET_ANALYSIS'; turn: number; moves: AnalyzedMove[] }
   | { type: 'CLEAR_GAME' };
 
@@ -337,6 +338,10 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
           turnAnalyses: { ...state.ui.turnAnalyses, [action.turn]: action.moves },
         },
       };
+    }
+
+    case 'SET_ERROR': {
+      return { ...state, ui: { ...state.ui, errorMessage: action.message } };
     }
 
     case 'CLEAR_GAME': {

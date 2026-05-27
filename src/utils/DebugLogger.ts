@@ -33,6 +33,9 @@ const CATEGORY_COLORS: Record<DebugCategory, string> = {
 
 class DebugLogger {
   private entries: DebugEntry[] = [];
+  private static MAX_ENTRIES = 500;
+  private static STORAGE_KEY = 'nigel_debug_log';
+  private persistTimer: ReturnType<typeof setTimeout> | null = null;
 
   log(turnNumber: number, playerName: string, category: DebugCategory, message: string, data?: Record<string, unknown>): void {
     const entry: DebugEntry = {
@@ -44,10 +47,47 @@ class DebugLogger {
       data,
     };
     this.entries.push(entry);
+    if (this.entries.length > DebugLogger.MAX_ENTRIES) {
+      this.entries = this.entries.slice(-DebugLogger.MAX_ENTRIES);
+    }
+    console.debug(`[${category}] T${turnNumber} ${playerName}: ${message}`, data ?? '');
+    this.schedulePersist();
+  }
+
+  error(turnNumber: number, playerName: string, message: string, data?: Record<string, unknown>): void {
+    this.log(turnNumber, playerName, 'ERROR', message, data);
+  }
+
+  private schedulePersist(): void {
+    if (this.persistTimer) return;
+    this.persistTimer = setTimeout(() => {
+      this.persistTimer = null;
+      try {
+        localStorage.setItem(DebugLogger.STORAGE_KEY, this.exportJSON());
+      } catch {
+        // localStorage may be full or unavailable
+      }
+    }, 1000);
+  }
+
+  static loadFromStorage(): DebugEntry[] {
+    try {
+      const raw = localStorage.getItem(DebugLogger.STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return parsed.log_entries ?? [];
+    } catch {
+      return [];
+    }
   }
 
   clear(): void {
     this.entries = [];
+    try {
+      localStorage.removeItem(DebugLogger.STORAGE_KEY);
+    } catch {
+      // ignore
+    }
   }
 
   getEntries(): DebugEntry[] {
@@ -59,6 +99,18 @@ class DebugLogger {
       nigel_version: '1.0',
       log_entries: this.entries,
     }, null, 2);
+  }
+
+  getEntriesWithStored(): DebugEntry[] {
+    const stored = DebugLogger.loadFromStorage();
+    const combined = [...stored, ...this.entries];
+    const seen = new Set<string>();
+    return combined.filter(e => {
+      const key = `${e.timestamp}|${e.turnNumber}|${e.category}|${e.message}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }
 
   generateHTML(): string {

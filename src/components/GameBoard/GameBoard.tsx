@@ -124,7 +124,10 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showExchange, showTileBag, isAIThinking, handleShuffle, passTurn, state.game.turnNumber, currentPlayer?.name]);
 
-  if (state.game.phase !== 'playing') return null;
+  if (state.game.phase !== 'playing') {
+    debugLogger.log(state.game.turnNumber, 'SYSTEM', 'STATE', `GameBoard returning null — phase is '${state.game.phase}'`);
+    return null;
+  }
 
   // Mobile layout
   if (isMobile) {

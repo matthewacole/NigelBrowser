@@ -22,6 +22,7 @@ export function GameSimulator({ onBack }: GameSimulatorProps) {
   const [report, setReport] = useState<GameReport | null>(null);
   const [batchResult, setBatchResult] = useState<BatchResult | null>(null);
   const [turnRecords, setTurnRecords] = useState<TurnRecord[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   const [batchProgress, setBatchProgress] = useState(0);
   const [showReport, setShowReport] = useState(false);
@@ -52,6 +53,10 @@ export function GameSimulator({ onBack }: GameSimulatorProps) {
       onTurn: (turn) => {
         setTurnRecords(prev => [...prev, turn]);
       },
+      onError: (err) => {
+        setErrors(prev => [...prev, err]);
+        console.error('[Sim] Error:', err);
+      },
       onComplete: (r) => {
         setReport(r);
         setShowReport(true);
@@ -62,6 +67,7 @@ export function GameSimulator({ onBack }: GameSimulatorProps) {
 
     setPhase('running');
     setTurnRecords([]);
+    setErrors([]);
     setReport(null);
     setProgress(0);
 
@@ -76,11 +82,16 @@ export function GameSimulator({ onBack }: GameSimulatorProps) {
       onStateChange: () => {
         forceRender(n => n + 1);
       },
+      onError: (err) => {
+        setErrors(prev => [...prev, err]);
+        console.error('[Sim] Batch Error:', err);
+      },
     });
     runnerRef.current = runner;
 
     setPhase('batch');
     setBatchResult(null);
+    setErrors([]);
     setBatchProgress(0);
 
     setTimeout(async () => {
@@ -262,6 +273,17 @@ export function GameSimulator({ onBack }: GameSimulatorProps) {
                 ))}
               </div>
             </div>
+
+            {errors.length > 0 && (
+              <div className="sim-errors">
+                <h3>Errors ({errors.length})</h3>
+                <div className="sim-errors-list">
+                  {errors.map((err, i) => (
+                    <div key={i} className="sim-error-row">{err}</div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {report && showReport && phase === 'complete' && (
               <div className="sim-report">

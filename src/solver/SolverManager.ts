@@ -99,7 +99,8 @@ export class SolverManager {
     try {
       const moves = await this._getAllMoves(board, rack);
       return moves.sort((a, b) => a.score - b.score);
-    } catch {
+    } catch (e) {
+      console.error('[Solver] Analysis failed:', e);
       return [];
     }
   }

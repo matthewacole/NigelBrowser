@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { GameProvider, useGame } from './state/GameContext';
 import { SettingsProvider } from './state/SettingsContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { MainMenu } from './components/Menu/MainMenu';
 import { GameBoard } from './components/GameBoard/GameBoard';
 import { GameOver } from './components/GameOver/GameOver';
@@ -84,7 +85,9 @@ export default function App() {
   return (
     <SettingsProvider>
       <GameProvider>
-        <AppContent />
+        <ErrorBoundary>
+          <AppContent />
+        </ErrorBoundary>
       </GameProvider>
     </SettingsProvider>
   );

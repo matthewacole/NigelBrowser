@@ -175,6 +175,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       };
 
       dispatch({ type: 'COMMIT_MOVE', move });
+    } catch (e) {
+      const s = stateRef.current;
+      const currentPlayer = s.game.players[s.game.currentPlayerIndex];
+      const msg = e instanceof Error ? e.message : String(e);
+      debugLogger.error(s.game.turnNumber, currentPlayer?.name ?? '?', `AI move error: ${msg}`);
+      dispatch({ type: 'SET_ERROR', message: `AI error: ${msg}` });
     } finally {
       isAIThinkingRef.current = false;
     }

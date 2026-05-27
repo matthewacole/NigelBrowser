@@ -7,8 +7,8 @@
   --bg-hover: #3a3a5a;
 
   --text-primary: #e0e0e0;
-  --text-secondary: #a0a0b0;
-  --text-muted: #606080;
+  --text-secondary: #c0c0d0;
+  --text-muted: #8888aa;
 
   --accent-purple: #7c3aed;
   --accent-blue: #3b82f6;
@@ -45,8 +45,8 @@
   --bg-hover: #e0e0f0;
 
   --text-primary: #1a1a2e;
-  --text-secondary: #4a4a6a;
-  --text-muted: #8a8aaa;
+  --text-secondary: #3a3a5a;
+  --text-muted: #6a6a8a;
 
   --tile-bg: #faf5e8;
   --tile-text: #1a1a2e;
@@ -1306,6 +1306,37 @@ html {
   color: var(--text-muted);
   font-style: italic;
   font-size: 12px;
+}
+
+.sim-errors {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid var(--accent-red);
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 8px;
+}
+
+.sim-errors h3 {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-red);
+  margin-bottom: 6px;
+}
+
+.sim-errors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sim-error-row {
+  font-size: 10px;
+  font-family: monospace;
+  color: var(--accent-red);
+  padding: 2px 4px;
+  border-radius: 2px;
+  background: rgba(239, 68, 68, 0.05);
+  word-break: break-all;
 }
 
 .sim-move-row {

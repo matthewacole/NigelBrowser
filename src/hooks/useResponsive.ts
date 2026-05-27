@@ -9,9 +9,9 @@ export interface ResponsiveInfo {
 
 export function useResponsive(): ResponsiveInfo {
   const [info, setInfo] = useState<ResponsiveInfo>(() => ({
-    isMobile: window.innerWidth < 768,
-    isTablet: window.innerWidth >= 768 && window.innerWidth < 1024,
-    isDesktop: window.innerWidth >= 1024,
+    isMobile: window.matchMedia('(max-width: 767px)').matches,
+    isTablet: window.matchMedia('(min-width: 768px) and (max-width: 1023px)').matches,
+    isDesktop: window.matchMedia('(min-width: 1024px)').matches,
     isTouchDevice: window.matchMedia('(pointer: coarse)').matches,
   }));
 

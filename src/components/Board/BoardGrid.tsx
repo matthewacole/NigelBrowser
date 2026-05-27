@@ -341,6 +341,10 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
     </div>
   ) : null;
 
+  if (!board || board.length === 0) {
+    return <div className="board-grid-wrapper" style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>Board unavailable</div>;
+  }
+
   return (
     <div className="board-grid-wrapper" style={{ position: 'relative', marginBottom: readOnly ? 0 : undefined }}>
       <div

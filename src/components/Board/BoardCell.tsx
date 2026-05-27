@@ -26,11 +26,11 @@ const BONUS_COLORS: Record<string, string> = {
 };
 
 const BONUS_TEXT_COLORS: Record<string, string> = {
-  tripleWord: '#FF3B30',
-  doubleWord: '#FF9500',
-  tripleLetter: '#007AFF',
-  doubleLetter: '#59ABE6',
-  center: '#FF9500',
+  tripleWord: '#fff',
+  doubleWord: '#fff',
+  tripleLetter: '#fff',
+  doubleLetter: '#fff',
+  center: '#fff',
   normal: 'transparent',
 };
 

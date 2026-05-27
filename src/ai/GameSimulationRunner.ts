@@ -75,93 +75,121 @@ export class GameSimulationRunner {
   }
 
   async runSingleTurn(): Promise<boolean> {
-    if (this.state.game.phase !== 'playing') return false;
+    try {
+      if (this.state.game.phase !== 'playing') return false;
 
-    const currentPlayer = this.state.game.players[this.state.game.currentPlayerIndex];
+      const currentPlayer = this.state.game.players[this.state.game.currentPlayerIndex];
+      const turnNum = this.state.game.turnNumber;
 
-    if (currentPlayer.type === 'computer') {
-      this.callbacks.onAIThinking?.(this.state.game.currentPlayerIndex);
+      console.group(`[Sim] Turn ${turnNum} — ${currentPlayer.name}`);
+      console.log('Rack:', currentPlayer.rack.map(t => t.letter).join(''));
+      console.log('Bag count:', this.state.game.bag.count);
 
-      const difficulty = currentPlayer.difficulty;
-      if (!difficulty) {
-        this.dispatch({ type: 'PASS' });
-        this.recordTurn('pass', 0, '');
-        this.callbacks.onStateChange?.(this.state);
-        return this.state.game.phase === 'playing';
-      }
+      if (currentPlayer.type === 'computer') {
+        this.callbacks.onAIThinking?.(this.state.game.currentPlayerIndex);
 
-      const result = await solverManager.getAIMove(
-        this.state.game.board,
-        currentPlayer.rack,
-        difficulty
-      );
-
-      if (!result.found || !result.word || result.score === undefined) {
-        const bagCount = this.state.game.bag.count;
-        const rackSize = currentPlayer.rack.length;
-        if (bagCount > 0 && rackSize > 0) {
-          const exchangeCount = Math.min(rackSize, bagCount, 7);
-          const shuffled = [...currentPlayer.rack].sort(() => Math.random() - 0.5);
-          const tileIds = shuffled.slice(0, exchangeCount).map(t => t.id);
-          this.dispatch({ type: 'EXCHANGE_TILES', tileIds });
-          this.recordTurn('exchange', 0, `exchanged ${tileIds.length} tiles`);
-        } else {
-          this.dispatch({ type: 'PASS' });
-          this.recordTurn('pass', 0, '');
-        }
-        this.callbacks.onStateChange?.(this.state);
-        return this.state.game.phase === 'playing';
-      }
-
-      const placements: { tile: import('../types/Tile').Tile; row: number; col: number }[] = [];
-      const chars = result.word.split('');
-      const rackCopy = [...this.state.game.players[this.state.game.currentPlayerIndex].rack];
-      for (let i = 0; i < chars.length; i++) {
-        const r = result.horizontal ? result.row! : result.row! + i;
-        const c = result.horizontal ? result.col! + i : result.col!;
-        if (this.state.game.board[r][c].tile !== null) continue;
-        const tileIdx = rackCopy.findIndex(t => t.letter === chars[i]);
-        if (tileIdx === -1) {
-          this.callbacks.onError?.(`AI rack missing letter '${chars[i]}' for word '${result.word}'`);
+        const difficulty = currentPlayer.difficulty;
+        if (!difficulty) {
           this.dispatch({ type: 'PASS' });
           this.recordTurn('pass', 0, '');
           this.callbacks.onStateChange?.(this.state);
+          console.log('→ No difficulty, passing');
+          console.groupEnd();
           return this.state.game.phase === 'playing';
         }
-        placements.push({ tile: rackCopy[tileIdx], row: r, col: c });
-        rackCopy.splice(tileIdx, 1);
-      }
 
-      if (placements.length === 0) {
+        const result = await solverManager.getAIMove(
+          this.state.game.board,
+          currentPlayer.rack,
+          difficulty
+        );
+
+        if (!result.found || !result.word || result.score === undefined) {
+          const bagCount = this.state.game.bag.count;
+          const rackSize = currentPlayer.rack.length;
+          if (bagCount > 0 && rackSize > 0) {
+            const exchangeCount = Math.min(rackSize, bagCount, 7);
+            const shuffled = [...currentPlayer.rack].sort(() => Math.random() - 0.5);
+            const tileIds = shuffled.slice(0, exchangeCount).map(t => t.id);
+            this.dispatch({ type: 'EXCHANGE_TILES', tileIds });
+            this.recordTurn('exchange', 0, `exchanged ${tileIds.length} tiles`);
+            console.log(`→ No moves found, exchanging ${tileIds.length} tiles`);
+          } else {
+            this.dispatch({ type: 'PASS' });
+            this.recordTurn('pass', 0, '');
+            console.log('→ No moves found and no bag to exchange, passing');
+          }
+          this.callbacks.onStateChange?.(this.state);
+          console.groupEnd();
+          return this.state.game.phase === 'playing';
+        }
+
+        console.log(`→ Found: ${result.word} at (${result.row},${result.col}) ${result.horizontal ? 'H' : 'V'} score=${result.score}`);
+
+        const placements: { tile: import('../types/Tile').Tile; row: number; col: number }[] = [];
+        const chars = result.word.split('');
+        const rackCopy = [...this.state.game.players[this.state.game.currentPlayerIndex].rack];
+        for (let i = 0; i < chars.length; i++) {
+          const r = result.horizontal ? result.row! : result.row! + i;
+          const c = result.horizontal ? result.col! + i : result.col!;
+          if (this.state.game.board[r][c].tile !== null) continue;
+          const tileIdx = rackCopy.findIndex(t => t.letter === chars[i]);
+          if (tileIdx === -1) {
+            const msg = `AI rack missing letter '${chars[i]}' for word '${result.word}'`;
+            this.callbacks.onError?.(msg);
+            this.dispatch({ type: 'PASS' });
+            this.recordTurn('pass', 0, '');
+            this.callbacks.onStateChange?.(this.state);
+            console.error('→', msg);
+            console.groupEnd();
+            return this.state.game.phase === 'playing';
+          }
+          placements.push({ tile: rackCopy[tileIdx], row: r, col: c });
+          rackCopy.splice(tileIdx, 1);
+        }
+
+        if (placements.length === 0) {
+          this.dispatch({ type: 'PASS' });
+          this.recordTurn('pass', 0, '');
+          this.callbacks.onStateChange?.(this.state);
+          console.log('→ No tiles to place, passing');
+          console.groupEnd();
+          return this.state.game.phase === 'playing';
+        }
+
+        const isBingo = placements.length === 7;
+        const move: Move = {
+          tiles: placements.map(p => ({ tile: p.tile, row: p.row, col: p.col })),
+          direction: result.horizontal ? 'horizontal' : 'vertical',
+          score: result.score,
+          wordsFormed: [result.word],
+          isBingo,
+          startRow: Math.min(...placements.map(p => p.row)),
+          startCol: Math.min(...placements.map(p => p.col)),
+          tileCount: placements.length,
+        };
+
+        this.callbacks.onAIMove?.(move);
+        this.dispatch({ type: 'COMMIT_MOVE', move });
+        this.recordTurn('play', result.score, result.word, isBingo);
+        this.callbacks.onStateChange?.(this.state);
+        console.log(`→ Committed ${result.word} for ${result.score}pts${isBingo ? ' BINGO!' : ''}`);
+      } else {
         this.dispatch({ type: 'PASS' });
         this.recordTurn('pass', 0, '');
         this.callbacks.onStateChange?.(this.state);
-        return this.state.game.phase === 'playing';
+        console.log('→ Human player, passing');
       }
 
-      const isBingo = placements.length === 7;
-      const move: Move = {
-        tiles: placements.map(p => ({ tile: p.tile, row: p.row, col: p.col })),
-        direction: result.horizontal ? 'horizontal' : 'vertical',
-        score: result.score,
-        wordsFormed: [result.word],
-        isBingo,
-        startRow: Math.min(...placements.map(p => p.row)),
-        startCol: Math.min(...placements.map(p => p.col)),
-        tileCount: placements.length,
-      };
-
-      this.callbacks.onAIMove?.(move);
-      this.dispatch({ type: 'COMMIT_MOVE', move });
-      this.recordTurn('play', result.score, result.word, isBingo);
-      this.callbacks.onStateChange?.(this.state);
-    } else {
-      this.dispatch({ type: 'PASS' });
-      this.recordTurn('pass', 0, '');
-      this.callbacks.onStateChange?.(this.state);
+      console.groupEnd();
+      return this.state.game.phase === 'playing';
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error('[Sim] runSingleTurn error:', e);
+      this.callbacks.onError?.(`Simulation error: ${msg}`);
+      console.groupEnd();
+      return false;
     }
-
-    return this.state.game.phase === 'playing';
   }
 
   private recordTurn(action: 'play' | 'pass' | 'exchange', score: number, word: string, isBingo = false): void {
@@ -215,8 +243,14 @@ export class GameSimulationRunner {
     const reports: GameReport[] = [];
 
     for (let i = 0; i < count; i++) {
-      const report = await this.runGame(players, speed);
-      reports.push(report);
+      try {
+        const report = await this.runGame(players, speed);
+        reports.push(report);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error(`[Sim] Batch game ${i + 1} failed:`, e);
+        this.callbacks.onError?.(`Batch game ${i + 1} failed: ${msg}`);
+      }
       this.callbacks.onStateChange?.(this.state);
     }
 
