@@ -73,8 +73,6 @@ export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory,
           </div>
         ))}
       </div>
-      <div className="score-bar-divider" />
-      <span className="score-bar-turn">Turn {turnNumber}</span>
       <button
         className="score-bar-settings"
         onClick={(e) => { e.stopPropagation(); onSettingsClick(); }}
