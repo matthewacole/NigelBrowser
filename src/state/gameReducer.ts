@@ -7,6 +7,12 @@ import { RACK_SIZE } from '../types/Constants';
 import { createStandardBoard } from '../types/BoardSquare';
 import { debugLogger } from '../utils/DebugLogger';
 
+function cloneGameState(state: GameState): GameState {
+  const clone = structuredClone(state);
+  clone.bag = TileBag.fromJSON((clone.bag as any)._tiles || []);
+  return clone;
+}
+
 export type GameAction =
   | { type: 'NEW_GAME'; players: Player[] }
   | { type: 'LOAD_GAME'; state: GameState }
@@ -62,7 +68,7 @@ export const initialAppState: AppState = {
 };
 
 function advanceTurn(state: GameState): GameState {
-  const newState = structuredClone(state);
+  const newState = cloneGameState(state);
   newState.currentPlayerIndex = (newState.currentPlayerIndex + 1) % newState.players.length;
   if (newState.currentPlayerIndex === 0) {
     newState.turnNumber += 1;
@@ -129,7 +135,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
     }
 
     case 'COMMIT_MOVE': {
-      const newGame = structuredClone(state.game);
+      const newGame = cloneGameState(state.game);
       const playerIndex = newGame.currentPlayerIndex;
       const player = newGame.players[playerIndex];
       const move = action.move;
@@ -219,7 +225,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
     }
 
     case 'EXCHANGE_TILES': {
-      let newGame = structuredClone(state.game);
+      let newGame = cloneGameState(state.game);
       const playerIndex = newGame.currentPlayerIndex;
       const player = newGame.players[playerIndex];
 
@@ -257,7 +263,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
     }
 
     case 'PASS': {
-      let newGame = structuredClone(state.game);
+      let newGame = cloneGameState(state.game);
       const playerIndex = newGame.currentPlayerIndex;
       newGame.players[playerIndex].consecutivePasses += 1;
 
@@ -291,7 +297,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
     }
 
     case 'FORFEIT': {
-      const newGame = structuredClone(state.game);
+      const newGame = cloneGameState(state.game);
       debugLogger.log(newGame.turnNumber, newGame.players[newGame.currentPlayerIndex]?.name ?? '?', 'FORFEIT', `${newGame.players[newGame.currentPlayerIndex]?.name ?? 'Player'} forfeited the game`);
       newGame.phase = 'gameOver';
       const results = calculateFinalScores(newGame);
@@ -303,7 +309,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
     }
 
     case 'SHUFFLE_RACK': {
-      const newGame = structuredClone(state.game);
+      const newGame = cloneGameState(state.game);
       const player = newGame.players[newGame.currentPlayerIndex];
       for (let i = player.rack.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -313,7 +319,7 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
     }
 
     case 'FINISH_GAME': {
-      const newGame = structuredClone(state.game);
+      const newGame = cloneGameState(state.game);
       newGame.phase = 'gameOver';
       const results = calculateFinalScores(newGame);
       const winners = results.map(r => ({ player: r.player, finalScore: r.finalScore })).sort((a, b) => b.finalScore - a.finalScore);

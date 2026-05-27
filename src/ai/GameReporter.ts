@@ -1,4 +1,7 @@
 import type { AppState } from '../state/gameReducer';
+import { TILE_DISTRIBUTION } from '../types/Constants';
+
+export const TOTAL_TILES = Object.values(TILE_DISTRIBUTION).reduce((sum, info) => sum + info.count, 0);
 
 export interface TurnRecord {
   turnNumber: number;
@@ -27,6 +30,7 @@ export interface GameReport {
   longestWord: string;
   totalBingos: number;
   bingoBreakdown: { player: string; words: string[] }[];
+  bagUsagePercent: number;
 }
 
 export interface BatchResult {
@@ -37,6 +41,7 @@ export interface BatchResult {
   avgTurnsPerGame: number;
   avgBingosPerGame: number;
   avgScorePerGame: number;
+  avgBagUsage: number;
 }
 
 export function generateReport(state: AppState, turnRecords: TurnRecord[]): GameReport {
@@ -79,6 +84,9 @@ export function generateReport(state: AppState, turnRecords: TurnRecord[]): Game
     }
   }
 
+  const tilesUsed = TOTAL_TILES - game.bag.count;
+  const bagUsagePercent = Math.round((tilesUsed / TOTAL_TILES) * 100);
+
   return {
     players,
     turns: turnRecords,
@@ -87,6 +95,7 @@ export function generateReport(state: AppState, turnRecords: TurnRecord[]): Game
     longestWord,
     totalBingos,
     bingoBreakdown: Object.entries(bingoBreakdown).map(([player, words]) => ({ player, words })),
+    bagUsagePercent,
   };
 }
 
@@ -96,6 +105,7 @@ export function aggregateBatch(reports: GameReport[]): BatchResult {
   let totalTurns = 0;
   let totalBingos = 0;
   let totalScoreSum = 0;
+  let totalBagUsage = 0;
 
   for (const report of reports) {
     const winner = report.players.reduce(
@@ -110,6 +120,7 @@ export function aggregateBatch(reports: GameReport[]): BatchResult {
 
     totalTurns += report.totalTurns;
     totalBingos += report.totalBingos;
+    totalBagUsage += report.bagUsagePercent;
     for (const p of report.players) {
       totalScoreSum += p.score;
     }
@@ -128,5 +139,6 @@ export function aggregateBatch(reports: GameReport[]): BatchResult {
     avgTurnsPerGame: Math.round(totalTurns / reports.length),
     avgBingosPerGame: Math.round(totalBingos / reports.length * 10) / 10,
     avgScorePerGame: Math.round(totalScoreSum / reports.length),
+    avgBagUsage: Math.round(totalBagUsage / reports.length),
   };
 }
