@@ -349,7 +349,7 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
             const placed = placedTiles.get(placedKey);
             const tile = placed ? placed.tile : square.tile;
             const isJustPlaced = placed && justPlacedIds.has(placed.tile.id);
-            const showFlash = dropFlash && dropFlash.row === ri && dropFlash.col === ci;
+            const showFlash: { row: number; col: number; success: boolean } | null = dropFlash !== null && dropFlash.row === ri && dropFlash.col === ci ? dropFlash : null;
             const staggerDelay = aiStaggerMap?.get(`${ri},${ci}`);
 
             return (
