@@ -20,32 +20,6 @@ function WaveLoader() {
   );
 }
 
-function ThinkingOverlay({ isThinking }: { isThinking: boolean }) {
-  const [visible, setVisible] = useState(false);
-  const [fading, setFading] = useState(false);
-
-  useEffect(() => {
-    if (isThinking) {
-      setVisible(true);
-      setFading(false);
-    } else if (visible && !fading) {
-      setFading(true);
-      const timer = setTimeout(() => {
-        setVisible(false);
-        setFading(false);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isThinking]);
-
-  if (!visible) return null;
-  return (
-    <div className={`wave-loader-overlay ${fading ? 'fade-out' : ''}`}>
-      <WaveLoader />
-    </div>
-  );
-}
-
 function AnimatedScore({ score }: { score: number }) {
   const [display, setDisplay] = useState(score);
   const prevRef = useRef(score);
@@ -71,6 +45,34 @@ function AnimatedScore({ score }: { score: number }) {
   }, [score]);
 
   return <>{display}</>;
+}
+
+function ComputerScore({ isThinking, score }: { isThinking: boolean; score: number }) {
+  const [phase, setPhase] = useState<'score' | 'entering' | 'overlay' | 'exiting'>('score');
+
+  useEffect(() => {
+    if (isThinking && (phase === 'score' || phase === 'exiting')) {
+      requestAnimationFrame(() => requestAnimationFrame(() => setPhase('entering')));
+    } else if (!isThinking && (phase === 'overlay' || phase === 'entering')) {
+      setPhase('exiting');
+      const timer = setTimeout(() => setPhase('score'), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isThinking]);
+
+  useEffect(() => {
+    if (phase === 'entering') {
+      const timer = setTimeout(() => setPhase('overlay'), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [phase]);
+
+  return (
+    <div className="computer-score" data-phase={phase}>
+      <div className="cs-content"><AnimatedScore score={score} /></div>
+      <div className="cs-overlay"><WaveLoader /></div>
+    </div>
+  );
 }
 
 export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory, onSettingsClick, bagCount }: ScoreBarProps) {
@@ -103,8 +105,11 @@ export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory,
               )}
             </span>
             <span className="score-bar-value">
-              <AnimatedScore score={player.score} />
-              {player.type === 'computer' && <ThinkingOverlay isThinking={idx === currentPlayerIndex} />}
+              {player.type === 'computer' ? (
+                <ComputerScore isThinking={idx === currentPlayerIndex} score={player.score} />
+              ) : (
+                <AnimatedScore score={player.score} />
+              )}
             </span>
           </div>
         ))}
