@@ -21,6 +21,9 @@ export function Tile({
   size = 44,
   style,
 }: TileProps) {
+  const letterSize = Math.max(10, Math.round(size * 0.41));
+  const scoreSize = Math.max(6, Math.round(size * 0.205));
+
   return (
     <div
       className={`tile ${isSelected ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${justPlaced ? 'just-placed' : ''}`}
@@ -34,8 +37,8 @@ export function Tile({
       onClick={onClick}
       onPointerDown={onPointerDown}
     >
-      <span className="tile-letter">{tile.letter}</span>
-      <span className="tile-score">{tile.score}</span>
+      <span className="tile-letter" style={{ fontSize: letterSize }}>{tile.letter}</span>
+      <span className="tile-score" style={{ fontSize: scoreSize }}>{tile.score}</span>
     </div>
   );
 }

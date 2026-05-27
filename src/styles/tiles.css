@@ -39,7 +39,6 @@
 }
 
 .tile-letter {
-  font-size: 18px;
   font-weight: 700;
   line-height: 1;
 }
@@ -48,7 +47,6 @@
   position: absolute;
   bottom: 1px;
   right: 3px;
-  font-size: 9px;
   font-weight: 700;
   opacity: 0.8;
   line-height: 1;

@@ -367,7 +367,7 @@ html {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border-color);
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .sidebar-actions {
@@ -416,6 +416,7 @@ html {
 /* Scoreboard */
 .scoreboard {
   padding: 16px;
+  flex-shrink: 0;
 }
 
 .turn-number {
@@ -482,6 +483,9 @@ html {
 
 /* Move Log */
 .move-log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: 16px;
 }
 
@@ -767,19 +771,21 @@ html {
 
   .score-bar-players {
     display: flex;
-    gap: 10px;
+    gap: 6px;
     flex: 1;
-    overflow-x: auto;
+    overflow: hidden;
   }
 
   .score-bar-player {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
     white-space: nowrap;
-    font-size: 12px;
+    font-size: 11px;
     padding: 2px 6px;
     border-radius: 4px;
+    flex-shrink: 1;
+    min-width: 0;
   }
 
   .score-bar-player.active {
@@ -792,6 +798,7 @@ html {
   }
 
   .score-bar-difficulty {
+    display: none;
     font-size: 9px;
     color: var(--text-muted);
   }
