@@ -55,42 +55,57 @@ export class SolverManager {
     rack: Tile[],
     difficulty: Difficulty
   ): Promise<AIMoveResult> {
+    const candidates = await this.getTopAIMoves(board, rack, difficulty, 1);
+    return candidates[0] ?? { found: false };
+  }
+
+  async getTopAIMoves(
+    board: BoardSquare[][],
+    rack: Tile[],
+    difficulty: Difficulty,
+    count: number = 3
+  ): Promise<AIMoveResult[]> {
     if (!this.ready) await this.load();
     try {
       const moves = await this._getAllMoves(board, rack);
-      if (moves.length === 0) return { found: false };
+      if (moves.length === 0) return [];
 
       const sorted = [...moves].sort((a, b) => a.score - b.score);
 
-      let chosen: AnalyzedMove;
-      switch (difficulty) {
-        case 'beginner':
-          chosen = sorted[0];
-          break;
-        case 'intermediate':
-          chosen = sorted[Math.floor(sorted.length / 2)];
-          break;
-        case 'expert':
-          chosen = sorted[sorted.length - 1];
-          break;
-        default:
-          chosen = sorted[sorted.length - 1];
+      let priorityMoves: AnalyzedMove[];
+      if (difficulty === 'beginner') {
+        priorityMoves = sorted;
+      } else if (difficulty === 'expert') {
+        priorityMoves = [...sorted].reverse();
+      } else {
+        const mid = Math.floor(sorted.length / 2);
+        priorityMoves = [];
+        for (let offset = 0; offset <= mid; offset++) {
+          if (mid - offset >= 0) priorityMoves.push(sorted[mid - offset]);
+          if (offset > 0 && mid + offset < sorted.length) priorityMoves.push(sorted[mid + offset]);
+        }
       }
 
-      const found = this._findWordPlacement(chosen.word, board, rack);
-      if (!found) return { found: false };
+      const candidates: AIMoveResult[] = [];
+      for (const mv of priorityMoves) {
+        if (candidates.length >= count) break;
+        const found = this._findWordPlacement(mv.word, board, rack);
+        if (found) {
+          candidates.push({
+            found: true,
+            word: mv.word,
+            row: found.row,
+            col: found.col,
+            horizontal: found.horizontal,
+            score: mv.score,
+          });
+        }
+      }
 
-      return {
-        found: true,
-        word: chosen.word,
-        row: found.row,
-        col: found.col,
-        horizontal: found.horizontal,
-        score: chosen.score,
-      };
+      return candidates;
     } catch (e) {
-      console.error('[Solver] AI move failed:', e);
-      return { found: false };
+      console.error('[Solver] getTopAIMoves failed:', e);
+      return [];
     }
   }
 

@@ -3,9 +3,10 @@ import type { Player, Difficulty } from '../types/Player';
 import type { Move } from '../types/Move';
 import { TileBag } from '../engine/TileBag';
 import { createInitialGameState, getCurrentPlayer } from '../types/GameState';
-import { RACK_SIZE } from '../types/Constants';
+import { RACK_SIZE, BOARD_SIZE } from '../types/Constants';
 import { createStandardBoard } from '../types/BoardSquare';
 import { debugLogger } from '../utils/DebugLogger';
+import { wordValidator } from '../engine/WordValidator';
 
 function cloneGameState(state: GameState): GameState {
   const clone = structuredClone(state);
@@ -149,6 +150,48 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
         }
         const rackIdx = player.rack.findIndex(t => t.id === pt.tile.id);
         if (rackIdx >= 0) player.rack.splice(rackIdx, 1);
+      }
+
+      // Defense-in-depth: scan board for any invalid words after placement
+      const scannedWords = new Set<string>();
+      const invalidWords: string[] = [];
+      for (const pt of move.tiles) {
+        // Horizontal word at this position
+        const hKey = `${pt.row},${pt.col}:H`;
+        if (!scannedWords.has(hKey)) {
+          scannedWords.add(hKey);
+          let hs = pt.col;
+          while (hs > 0 && newGame.board[pt.row][hs - 1].tile) hs--;
+          let he = pt.col;
+          while (he < BOARD_SIZE - 1 && newGame.board[pt.row][he + 1].tile) he++;
+          if (he - hs >= 1) {
+            let word = '';
+            for (let c = hs; c <= he; c++) word += newGame.board[pt.row][c].tile!.letter;
+            if (!wordValidator.isValidWord(word) && !invalidWords.includes(word)) {
+              invalidWords.push(word);
+            }
+          }
+        }
+        // Vertical word at this position
+        const vKey = `${pt.row},${pt.col}:V`;
+        if (!scannedWords.has(vKey)) {
+          scannedWords.add(vKey);
+          let vs = pt.row;
+          while (vs > 0 && newGame.board[vs - 1][pt.col].tile) vs--;
+          let ve = pt.row;
+          while (ve < BOARD_SIZE - 1 && newGame.board[ve + 1][pt.col].tile) ve++;
+          if (ve - vs >= 1) {
+            let word = '';
+            for (let r = vs; r <= ve; r++) word += newGame.board[r][pt.col].tile!.letter;
+            if (!wordValidator.isValidWord(word) && !invalidWords.includes(word)) {
+              invalidWords.push(word);
+            }
+          }
+        }
+      }
+      if (invalidWords.length > 0) {
+        debugLogger.log(newGame.turnNumber, player.name, 'ERROR',
+          `Board has invalid word(s) after commit: ${invalidWords.join(', ')}`);
       }
 
       const tilesUsed = move.tileCount;
