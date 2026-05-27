@@ -36,7 +36,7 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
   const currentPlayer = state.game.players[state.game.currentPlayerIndex];
   const isAIThinking = state.game.players[state.game.currentPlayerIndex]?.type === 'computer';
 
-  const visibleRack = (currentPlayer?.rack ?? []).filter(t => !placedTileIds.includes(t.id));
+  const visibleRack = isAIThinking ? [] : (currentPlayer?.rack ?? []).filter(t => !placedTileIds.includes(t.id));
 
   useEffect(() => {
     if (state.ui.showBingoConfetti) {
@@ -154,6 +154,7 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
           currentPlayerIndex={state.game.currentPlayerIndex}
           turnNumber={state.game.turnNumber}
           moveHistory={state.game.moveHistory}
+          bag={state.game.bag}
         />
 
         {state.ui.errorMessage && (

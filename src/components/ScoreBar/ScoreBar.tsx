@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Player } from '../../types/Player';
 import type { RecordedMove, GameState } from '../../types/GameState';
+import type { TileBag } from '../../engine/TileBag';
 import { difficultyDisplayName } from '../../types/Player';
 
 interface ScoreBarProps {
@@ -8,6 +9,7 @@ interface ScoreBarProps {
   currentPlayerIndex: number;
   turnNumber: number;
   moveHistory: RecordedMove[];
+  bag: TileBag;
 }
 
 function AnimatedScore({ score }: { score: number }) {
@@ -37,7 +39,7 @@ function AnimatedScore({ score }: { score: number }) {
   return <>{display}</>;
 }
 
-export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory }: ScoreBarProps) {
+export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory, bag }: ScoreBarProps) {
   const [showMoveLog, setShowMoveLog] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -103,6 +105,17 @@ export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory 
               })}
             </div>
           )}
+          <div className="score-bar-dropdown-header" style={{marginTop:8}}>Tile Bag ({bag.count} remaining)</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:2,padding:'6px 10px 10px',justifyContent:'center'}}>
+            {Array.from(
+              bag.tiles.reduce((m, t) => m.set(t.letter, (m.get(t.letter) ?? 0) + 1), new Map<string, number>())
+            ).sort(([a], [b]) => a.localeCompare(b)).map(([letter, count]) => (
+              <div key={letter} style={{display:'flex',alignItems:'center',gap:2,background:'var(--tile-bg)',borderRadius:3,padding:'2px 5px',fontSize:11,fontWeight:600}}>
+                <span>{letter}</span>
+                <span style={{fontWeight:400,fontSize:9,opacity:0.7}}>{count}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
