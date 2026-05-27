@@ -139,6 +139,7 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
           turnNumber={state.game.turnNumber}
           moveHistory={state.game.moveHistory}
           onSettingsClick={() => setShowSettings(true)}
+          bagCount={state.game.bag.count}
         />
 
         {state.ui.errorMessage && (

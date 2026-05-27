@@ -16,6 +16,32 @@ function WaveLoader() {
   );
 }
 
+function ThinkingOverlay({ isThinking }: { isThinking: boolean }) {
+  const [visible, setVisible] = useState(false);
+  const [fading, setFading] = useState(false);
+
+  useEffect(() => {
+    if (isThinking) {
+      setVisible(true);
+      setFading(false);
+    } else if (visible && !fading) {
+      setFading(true);
+      const timer = setTimeout(() => {
+        setVisible(false);
+        setFading(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isThinking]);
+
+  if (!visible) return null;
+  return (
+    <div className={`wave-loader-overlay ${fading ? 'fade-out' : ''}`}>
+      <WaveLoader />
+    </div>
+  );
+}
+
 function AnimatedScore({ score, duration }: { score: number; duration: number }) {
   const [display, setDisplay] = useState(score);
   const prevScoreRef = useRef(score);
@@ -76,11 +102,8 @@ export function Scoreboard({ players, currentPlayerIndex, turnNumber }: Scoreboa
                 )}
               </span>
               <span className="player-score-value">
-                {player.type === 'computer' && idx === currentPlayerIndex ? (
-                  <WaveLoader />
-                ) : (
-                  <AnimatedScore score={player.score} duration={countUpDuration} />
-                )}
+                <AnimatedScore score={player.score} duration={countUpDuration} />
+                {player.type === 'computer' && <ThinkingOverlay isThinking={idx === currentPlayerIndex} />}
               </span>
             </div>
             <div className="player-rack-preview">

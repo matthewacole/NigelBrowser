@@ -9,12 +9,39 @@ interface ScoreBarProps {
   turnNumber: number;
   moveHistory: RecordedMove[];
   onSettingsClick: () => void;
+  bagCount: number;
 }
 
 function WaveLoader() {
   return (
     <div className="wave-loader">
       <span /><span /><span /><span /><span />
+    </div>
+  );
+}
+
+function ThinkingOverlay({ isThinking }: { isThinking: boolean }) {
+  const [visible, setVisible] = useState(false);
+  const [fading, setFading] = useState(false);
+
+  useEffect(() => {
+    if (isThinking) {
+      setVisible(true);
+      setFading(false);
+    } else if (visible && !fading) {
+      setFading(true);
+      const timer = setTimeout(() => {
+        setVisible(false);
+        setFading(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isThinking]);
+
+  if (!visible) return null;
+  return (
+    <div className={`wave-loader-overlay ${fading ? 'fade-out' : ''}`}>
+      <WaveLoader />
     </div>
   );
 }
@@ -46,7 +73,7 @@ function AnimatedScore({ score }: { score: number }) {
   return <>{display}</>;
 }
 
-export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory, onSettingsClick }: ScoreBarProps) {
+export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory, onSettingsClick, bagCount }: ScoreBarProps) {
   const [showMoveLog, setShowMoveLog] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -76,11 +103,8 @@ export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory,
               )}
             </span>
             <span className="score-bar-value">
-              {player.type === 'computer' && idx === currentPlayerIndex ? (
-                <WaveLoader />
-              ) : (
-                <AnimatedScore score={player.score} />
-              )}
+              <AnimatedScore score={player.score} />
+              {player.type === 'computer' && <ThinkingOverlay isThinking={idx === currentPlayerIndex} />}
             </span>
           </div>
         ))}
@@ -98,33 +122,38 @@ export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory,
       {showMoveLog && (
         <div className="score-bar-dropdown" ref={dropdownRef}>
           <div className="score-bar-dropdown-header">Move Log</div>
-          {moveHistory.length === 0 ? (
-            <div className="score-bar-dropdown-empty">No moves yet</div>
-          ) : (
-            <div className="score-bar-dropdown-list">
-              {[...moveHistory].reverse().map((record, i) => {
-                const player = players[record.playerIndex];
-                const pName = player?.name ?? '?';
-                let label = '';
-                let text = '';
-                let cls = '';
-                if (record.action.type === 'play') {
-                  label = 'PLAY'; text = `${record.action.word} +${record.scoreGained}`; cls = 'play';
-                } else if (record.action.type === 'exchange') {
-                  label = 'EXCH'; text = `${record.action.tileCount} tiles`; cls = 'exchange';
-                } else {
-                  label = 'PASS'; cls = 'pass';
-                }
-                return (
-                  <div key={i} className={`score-bar-move-row ${cls}`}>
-                    <span className="score-bar-move-player">{pName}</span>
-                    <span className={`score-bar-move-badge ${cls}`}>{label}</span>
-                    {text && <span className="score-bar-move-text">{text}</span>}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <div className="score-bar-dropdown-body">
+            {moveHistory.length === 0 ? (
+              <div className="score-bar-dropdown-empty">No moves yet</div>
+            ) : (
+              <div className="score-bar-dropdown-list">
+                {[...moveHistory].reverse().map((record, i) => {
+                  const player = players[record.playerIndex];
+                  const pName = player?.name ?? '?';
+                  let label = '';
+                  let text = '';
+                  let cls = '';
+                  if (record.action.type === 'play') {
+                    label = 'PLAY'; text = `${record.action.word} +${record.scoreGained}`; cls = 'play';
+                  } else if (record.action.type === 'exchange') {
+                    label = 'EXCH'; text = `${record.action.tileCount} tiles`; cls = 'exchange';
+                  } else {
+                    label = 'PASS'; cls = 'pass';
+                  }
+                  return (
+                    <div key={i} className={`score-bar-move-row ${cls}`}>
+                      <span className="score-bar-move-player">{pName}</span>
+                      <span className={`score-bar-move-badge ${cls}`}>{label}</span>
+                      {text && <span className="score-bar-move-text">{text}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          <div className="score-bar-dropdown-tilebag">
+            Tile Bag: {bagCount} remaining
+          </div>
         </div>
       )}
     </div>

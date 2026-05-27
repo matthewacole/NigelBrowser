@@ -493,6 +493,7 @@ html {
   font-size: 20px;
   font-weight: 700;
   color: var(--accent-gold);
+  position: relative;
 }
 
 .player-rack-preview {
@@ -856,6 +857,7 @@ html {
     font-size: 14px;
     min-width: 20px;
     text-align: right;
+    position: relative;
   }
 
   .score-bar-divider {
@@ -895,7 +897,9 @@ html {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     z-index: 100;
     max-height: 50vh;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .score-bar-dropdown-header {
@@ -905,6 +909,13 @@ html {
     letter-spacing: 1px;
     color: var(--text-muted);
     border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+  }
+
+  .score-bar-dropdown-body {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
   }
 
   .score-bar-dropdown-empty {
@@ -917,6 +928,16 @@ html {
   .score-bar-dropdown-list {
     display: flex;
     flex-direction: column;
+  }
+
+  .score-bar-dropdown-tilebag {
+    flex-shrink: 0;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-sidebar);
   }
 
   .score-bar-move-row {
