@@ -169,12 +169,16 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
           />
         ) : (
           <>
-            <Rack
-              tiles={visibleRack}
-              selectedTileId={selectedTileId}
-              onTileClick={handleRackTileClick}
-              onTilePointerDown={handleRackTilePointerDown}
-            />
+            {isAIThinking ? (
+              <div className="rack rack-thinking">Computer thinking…</div>
+            ) : (
+              <Rack
+                tiles={visibleRack}
+                selectedTileId={selectedTileId}
+                onTileClick={handleRackTileClick}
+                onTilePointerDown={handleRackTilePointerDown}
+              />
+            )}
 
             <div className="action-buttons action-buttons-mobile">
               <button
@@ -230,91 +234,101 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
   // Desktop layout
   return (
     <div className="game-board">
-      <div className="game-sidebar">
-        <Scoreboard
-          players={state.game.players}
-          currentPlayerIndex={state.game.currentPlayerIndex}
-          turnNumber={state.game.turnNumber}
-        />
-        <MoveLog moveHistory={state.game.moveHistory} players={state.game.players} />
-        <div className="sidebar-actions">
-          <button className="btn btn-ghost" onClick={() => setShowTileBag(true)}>
-            Tile Bag: {state.game.bag.count}
-          </button>
-          <button className="btn btn-ghost sidebar-settings-btn" onClick={() => setShowSettings(true)}>
-            ⚙
-          </button>
+      <div className="game-main">
+        <div className="game-sidebar">
+          <Scoreboard
+            players={state.game.players}
+            currentPlayerIndex={state.game.currentPlayerIndex}
+            turnNumber={state.game.turnNumber}
+          />
+          <MoveLog moveHistory={state.game.moveHistory} players={state.game.players} />
+          <div className="sidebar-actions">
+            <button className="btn btn-ghost sidebar-settings-btn" onClick={() => setShowSettings(true)}>
+              ⚙
+            </button>
+          </div>
+        </div>
+
+        <div className="game-center">
+          {state.ui.errorMessage && (
+            <div className="error-banner">{state.ui.errorMessage}</div>
+          )}
+
+          <div className="board-container">
+            <BoardGrid
+              ref={boardGridRef}
+              board={state.game.board}
+              onCommitMove={handleCommitMove}
+              rackTiles={visibleRack}
+              onRecallTiles={handleRecallTiles}
+              onPlacedTilesChange={handlePlacedTilesChange}
+              readOnly={isAIThinking}
+              aiStaggerMap={aiStaggerMap}
+              sidebarWidth={sidebarWidth}
+              padding={boardPadding}
+            />
+          </div>
+
+          {showExchange ? (
+            <ExchangePanel
+              rack={currentPlayer?.rack ?? []}
+              onExchange={handleExchangeConfirm}
+              onCancel={() => setShowExchange(false)}
+              bagCount={state.game.bag.count}
+            />
+          ) : (
+            <>
+              {isAIThinking ? (
+                <div className="rack rack-thinking">Computer thinking…</div>
+              ) : (
+                <Rack
+                  tiles={visibleRack}
+                  selectedTileId={selectedTileId}
+                  onTileClick={handleRackTileClick}
+                  onTilePointerDown={handleRackTilePointerDown}
+                />
+              )}
+
+              <div className="action-buttons">
+                <button
+                  className="btn btn-secondary"
+                  disabled={state.game.bag.count === 0 || isAIThinking}
+                  onClick={() => setShowExchange(true)}
+                >
+                  Exchange
+                </button>
+                <button
+                  className="btn btn-ghost"
+                  disabled={isAIThinking}
+                  onClick={passTurn}
+                >
+                  Pass
+                </button>
+                <button
+                  className="btn btn-ghost"
+                  disabled={isAIThinking}
+                  onClick={handleShuffle}
+                >
+                  Shuffle
+                </button>
+                <button
+                  className="btn btn-danger"
+                  disabled={isAIThinking}
+                  onClick={forfeit}
+                >
+                  Forfeit
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      <div className="game-center">
-        {state.ui.errorMessage && (
-          <div className="error-banner">{state.ui.errorMessage}</div>
-        )}
-
-        <div className="board-container">
-          <BoardGrid
-            ref={boardGridRef}
-            board={state.game.board}
-            onCommitMove={handleCommitMove}
-            rackTiles={visibleRack}
-            onRecallTiles={handleRecallTiles}
-            onPlacedTilesChange={handlePlacedTilesChange}
-            readOnly={isAIThinking}
-            aiStaggerMap={aiStaggerMap}
-            sidebarWidth={sidebarWidth}
-            padding={boardPadding}
-          />
-        </div>
-
-        {showExchange ? (
-          <ExchangePanel
-            rack={currentPlayer?.rack ?? []}
-            onExchange={handleExchangeConfirm}
-            onCancel={() => setShowExchange(false)}
-            bagCount={state.game.bag.count}
-          />
-        ) : (
-          <>
-            <Rack
-              tiles={visibleRack}
-              selectedTileId={selectedTileId}
-              onTileClick={handleRackTileClick}
-              onTilePointerDown={handleRackTilePointerDown}
-            />
-
-            <div className="action-buttons">
-              <button
-                className="btn btn-secondary"
-                disabled={state.game.bag.count === 0 || isAIThinking}
-                onClick={() => setShowExchange(true)}
-              >
-                Exchange
-              </button>
-              <button
-                className="btn btn-ghost"
-                disabled={isAIThinking}
-                onClick={passTurn}
-              >
-                Pass
-              </button>
-              <button
-                className="btn btn-ghost"
-                disabled={isAIThinking}
-                onClick={handleShuffle}
-              >
-                Shuffle
-              </button>
-              <button
-                className="btn btn-danger"
-                disabled={isAIThinking}
-                onClick={forfeit}
-              >
-                Forfeit
-              </button>
-            </div>
-          </>
-        )}
+      <div className="game-footer">
+        <button onClick={() => setShowTileBag(true)}>
+          Tile Bag: {state.game.bag.count}
+        </button>
+        <span>Turn {state.game.turnNumber}</span>
       </div>
 
       {showTileBag && (

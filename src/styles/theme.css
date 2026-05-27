@@ -357,7 +357,15 @@ html {
 .game-board {
   height: 100vh;
   display: flex;
+  flex-direction: column;
   overflow: hidden;
+}
+
+.game-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .game-sidebar {
@@ -367,13 +375,39 @@ html {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border-color);
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .sidebar-actions {
   padding: 12px 16px;
   border-top: 1px solid var(--border-color);
   margin-top: auto;
+  flex-shrink: 0;
+}
+
+.game-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-sidebar);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.game-footer button {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.game-footer button:hover {
+  background: rgba(124, 58, 237, 0.1);
 }
 
 .game-center {
@@ -483,6 +517,11 @@ html {
 /* Move Log */
 .move-log {
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  flex: 1;
 }
 
 .move-log h3 {
@@ -491,6 +530,7 @@ html {
   letter-spacing: 1px;
   color: var(--text-muted);
   margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 .empty-log {
@@ -503,6 +543,20 @@ html {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Rack placeholder for AI thinking */
+.rack-thinking {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
 }
 
 .move-row {

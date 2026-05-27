@@ -8,6 +8,14 @@ interface ScoreboardProps {
   turnNumber: number;
 }
 
+function WaveLoader() {
+  return (
+    <div className="wave-loader">
+      <span /><span /><span /><span /><span />
+    </div>
+  );
+}
+
 function AnimatedScore({ score, duration }: { score: number; duration: number }) {
   const [display, setDisplay] = useState(score);
   const prevScoreRef = useRef(score);
@@ -58,7 +66,7 @@ export function Scoreboard({ players, currentPlayerIndex, turnNumber }: Scoreboa
         return (
           <div
             key={player.id}
-            className={`player-score ${idx === currentPlayerIndex ? 'active' : ''} ${player.type === 'computer' && idx === currentPlayerIndex ? 'score-ai-border' : ''}`}
+            className={`player-score ${idx === currentPlayerIndex ? 'active' : ''}`}
           >
             <div className="player-info">
               <span className="player-name">
@@ -68,7 +76,11 @@ export function Scoreboard({ players, currentPlayerIndex, turnNumber }: Scoreboa
                 )}
               </span>
               <span className="player-score-value">
-                <AnimatedScore score={player.score} duration={countUpDuration} />
+                {player.type === 'computer' && idx === currentPlayerIndex ? (
+                  <WaveLoader />
+                ) : (
+                  <AnimatedScore score={player.score} duration={countUpDuration} />
+                )}
               </span>
             </div>
             <div className="player-rack-preview">

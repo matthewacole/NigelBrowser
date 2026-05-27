@@ -1,34 +1,24 @@
-/* AI Score Tile Border */
-.score-ai-border {
-  position: relative;
+/* Wave Loader */
+.wave-loader {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 20px;
 }
-.score-ai-border::before {
-  content: '';
-  position: absolute;
-  inset: -3px;
-  border-radius: 10px;
-  pointer-events: none;
-  z-index: 10;
-  background: conic-gradient(
-    from 0deg,
-    transparent,
-    transparent 10%,
-    #7c3aed 25%,
-    #3b82f6 40%,
-    transparent 50%,
-    transparent 60%,
-    #ec4899 75%,
-    #7c3aed 90%,
-    transparent
-  );
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: xor;
-  padding: 3px;
-  animation:
-    rotate-gradient 3s linear infinite,
-    border-pulse 2s ease-in-out infinite;
-  filter: blur(0.5px);
-  box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+.wave-loader span {
+  width: 4px;
+  height: 100%;
+  background: var(--accent-purple);
+  border-radius: 4px;
+  animation: wave 1s ease-in-out infinite;
+}
+.wave-loader span:nth-child(2) { animation-delay: 0.1s; }
+.wave-loader span:nth-child(3) { animation-delay: 0.2s; }
+.wave-loader span:nth-child(4) { animation-delay: 0.3s; }
+.wave-loader span:nth-child(5) { animation-delay: 0.4s; }
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.3); opacity: 0.4; }
+  50% { transform: scaleY(1); opacity: 1; }
 }
 
 /* AI Thinking Border */

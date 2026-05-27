@@ -11,6 +11,14 @@ interface ScoreBarProps {
   onSettingsClick: () => void;
 }
 
+function WaveLoader() {
+  return (
+    <div className="wave-loader">
+      <span /><span /><span /><span /><span />
+    </div>
+  );
+}
+
 function AnimatedScore({ score }: { score: number }) {
   const [display, setDisplay] = useState(score);
   const prevRef = useRef(score);
@@ -59,7 +67,7 @@ export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory,
         {players.map((player, idx) => (
           <div
             key={player.id}
-            className={`score-bar-player ${idx === currentPlayerIndex ? 'active' : ''} ${player.type === 'computer' && idx === currentPlayerIndex ? 'score-ai-border' : ''}`}
+            className={`score-bar-player ${idx === currentPlayerIndex ? 'active' : ''}`}
           >
             <span className="score-bar-name">
               {player.name}
@@ -68,7 +76,11 @@ export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory,
               )}
             </span>
             <span className="score-bar-value">
-              <AnimatedScore score={player.score} />
+              {player.type === 'computer' && idx === currentPlayerIndex ? (
+                <WaveLoader />
+              ) : (
+                <AnimatedScore score={player.score} />
+              )}
             </span>
           </div>
         ))}
