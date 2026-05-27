@@ -165,7 +165,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         s.game.board,
         currentPlayer.rack,
         effectiveDifficulty,
-        3
+        10
       );
 
       if (candidates.length === 0) {
