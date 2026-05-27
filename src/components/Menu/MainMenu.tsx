@@ -3,6 +3,7 @@ import { useGame } from '../../state/GameContext';
 import { GameSetup } from './GameSetup';
 import { wordValidator } from '../../engine/WordValidator';
 import { FallingTiles } from './FallingTiles';
+import { Settings } from '../Settings/Settings';
 import type { Player } from '../../types/Player';
 
 const TAGLINES = [
@@ -18,11 +19,16 @@ const TAGLINES = [
   "Blank tiles? We don't need no stinking blank tiles.",
 ];
 
-export function MainMenu() {
+interface MainMenuProps {
+  onSimulatorLaunch?: () => void;
+}
+
+export function MainMenu({ onSimulatorLaunch }: MainMenuProps) {
   const { startNewGame, getSavedGameExists, loadSavedGame } = useGame();
   const [showSetup, setShowSetup] = useState(false);
   const [showDict, setShowDict] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [tagline, setTagline] = useState('');
   const [hasSave, setHasSave] = useState(false);
 
@@ -39,6 +45,14 @@ export function MainMenu() {
   return (
     <div className="main-menu">
       <FallingTiles />
+
+      <button
+        className="main-menu-settings"
+        onClick={() => setShowSettings(true)}
+        aria-label="Settings"
+      >
+        ⚙
+      </button>
 
       <div className="menu-content">
         <div className="menu-logo">
@@ -103,6 +117,13 @@ export function MainMenu() {
             <TutorialContent onClose={() => setShowTutorial(false)} />
           </div>
         </div>
+      )}
+
+      {showSettings && (
+        <Settings
+          onClose={() => setShowSettings(false)}
+          onSimulatorClick={onSimulatorLaunch}
+        />
       )}
     </div>
   );

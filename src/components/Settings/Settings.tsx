@@ -2,9 +2,10 @@ import { useSettings } from '../../state/SettingsContext';
 
 interface SettingsProps {
   onClose: () => void;
+  onSimulatorClick?: () => void;
 }
 
-export function Settings({ onClose }: SettingsProps) {
+export function Settings({ onClose, onSimulatorClick }: SettingsProps) {
   const { settings, updateSettings } = useSettings();
 
   return (
@@ -49,6 +50,18 @@ export function Settings({ onClose }: SettingsProps) {
             />
           </label>
         </div>
+
+        {onSimulatorClick && (
+          <>
+            <hr className="settings-divider" />
+            <button
+              className="btn btn-primary settings-simulator-btn"
+              onClick={() => { onClose(); onSimulatorClick(); }}
+            >
+              AI vs AI Simulator
+            </button>
+          </>
+        )}
 
         <button className="btn btn-secondary" onClick={onClose}>Close</button>
       </div>

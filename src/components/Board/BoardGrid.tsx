@@ -16,6 +16,8 @@ interface BoardGridProps {
   onPlacedTilesChange?: (placedTileIds: string[]) => void;
   readOnly?: boolean;
   aiStaggerMap?: Map<string, number>;
+  sidebarWidth?: number;
+  padding?: number;
 }
 
 export interface BoardGridHandle {
@@ -50,24 +52,33 @@ const EMPTY_DRAG: DragState = {
 };
 
 export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function BoardGrid({
-  board, onCommitMove, rackTiles, onRecallTiles, readOnly, onPlacedTilesChange, aiStaggerMap
+  board, onCommitMove, rackTiles, onRecallTiles, readOnly, onPlacedTilesChange, aiStaggerMap,
+  sidebarWidth = 0, padding = 32,
 }, ref) {
   const [drag, setDrag] = useState<DragState>(EMPTY_DRAG);
   const [placedTiles, setPlacedTiles] = useState<Map<string, { tile: TileType; row: number; col: number }>>(new Map());
   const [justPlacedIds, setJustPlacedIds] = useState<Set<string>>(new Set());
   const [dropFlash, setDropFlash] = useState<{ row: number; col: number; success: boolean } | null>(null);
-  const [cellSize, setCellSize] = useState(() => getBoardSquareSize(window.innerWidth));
+  const calcCellSize = useCallback(() => {
+    return getBoardSquareSize(window.innerWidth, sidebarWidth, padding);
+  }, [sidebarWidth, padding]);
+
+  const [cellSize, setCellSize] = useState(calcCellSize);
   const boardRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState>(EMPTY_DRAG);
   const placedRef = useRef<Map<string, { tile: TileType; row: number; col: number }>>(new Map());
 
   useEffect(() => {
     const handleResize = () => {
-      setCellSize(getBoardSquareSize(window.innerWidth));
+      setCellSize(calcCellSize());
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [calcCellSize]);
+
+  useEffect(() => {
+    setCellSize(calcCellSize());
+  }, [calcCellSize]);
 
   dragRef.current = drag;
   placedRef.current = placedTiles;
@@ -331,7 +342,7 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
   ) : null;
 
   return (
-    <div className="board-grid-wrapper" style={{ position: 'relative' }}>
+    <div className="board-grid-wrapper" style={{ position: 'relative', marginBottom: readOnly ? 0 : undefined }}>
       <div
         ref={boardRef}
         className="board-grid"
@@ -375,7 +386,7 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
 
       {dragTile}
 
-      {preview && (
+      {!readOnly && preview && (
         <div className={`preview-bar ${preview.valid ? 'valid' : 'invalid'}`}>
           {preview.valid ? (
             <span>✓ {preview.words?.map(w => `${w.word} (${w.score})`).join(', ')} — {preview.score} pts</span>
@@ -385,14 +396,16 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
         </div>
       )}
 
-      <div className="board-actions">
-        <button className="btn btn-primary" disabled={!preview?.valid} onClick={handlePlay}>
-          Play
-        </button>
-        <button className="btn btn-secondary" disabled={placedTiles.size === 0} onClick={handleRecall}>
-          Recall
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="board-actions">
+          <button className="btn btn-primary" disabled={!preview?.valid} onClick={handlePlay}>
+            Play
+          </button>
+          <button className="btn btn-secondary" disabled={placedTiles.size === 0} onClick={handleRecall}>
+            Recall
+          </button>
+        </div>
+      )}
     </div>
   );
 });

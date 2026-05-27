@@ -15,9 +15,15 @@ import { TileBagView } from '../TileBag/TileBag';
 import { Settings } from '../Settings/Settings';
 import { debugLogger } from '../../utils/DebugLogger';
 
-export function GameBoard() {
+interface GameBoardProps {
+  onSimulatorLaunch?: () => void;
+}
+
+export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
   const { state, dispatch, attemptPlay, exchangeTiles, pass: passTurn, forfeit } = useGame();
-  const { isMobile } = useResponsive();
+  const { isMobile, isTablet } = useResponsive();
+  const sidebarWidth = isMobile ? 0 : isTablet ? 220 : 280;
+  const boardPadding = isMobile ? 4 : 32;
   const [showExchange, setShowExchange] = useState(false);
   const [showTileBag, setShowTileBag] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -146,6 +152,8 @@ export function GameBoard() {
             onPlacedTilesChange={handlePlacedTilesChange}
             readOnly={isAIThinking}
             aiStaggerMap={aiStaggerMap}
+            sidebarWidth={0}
+            padding={boardPadding}
           />
           {isAIThinking && <AppleIntelligenceBorder isBingoMode={state.ui.showBingoConfetti} />}
         </div>
@@ -209,7 +217,7 @@ export function GameBoard() {
         )}
 
         {showSettings && (
-          <Settings onClose={() => setShowSettings(false)} />
+          <Settings onClose={() => setShowSettings(false)} onSimulatorClick={onSimulatorLaunch} />
         )}
 
         {animateBingo && <BingoConfetti score={bingoScore} onDone={() => setAnimateBingo(false)} />}
@@ -217,7 +225,7 @@ export function GameBoard() {
     );
   }
 
-  // Desktop layout (unchanged)
+  // Desktop layout
   return (
     <div className="game-board">
       <div className="game-sidebar">
@@ -230,6 +238,9 @@ export function GameBoard() {
         <div className="sidebar-actions">
           <button className="btn btn-ghost" onClick={() => setShowTileBag(true)}>
             Tile Bag: {state.game.bag.count}
+          </button>
+          <button className="btn btn-ghost sidebar-settings-btn" onClick={() => setShowSettings(true)}>
+            ⚙
           </button>
         </div>
       </div>
@@ -249,6 +260,8 @@ export function GameBoard() {
             onPlacedTilesChange={handlePlacedTilesChange}
             readOnly={isAIThinking}
             aiStaggerMap={aiStaggerMap}
+            sidebarWidth={sidebarWidth}
+            padding={boardPadding}
           />
           {isAIThinking && <AppleIntelligenceBorder isBingoMode={state.ui.showBingoConfetti} />}
         </div>
@@ -313,7 +326,7 @@ export function GameBoard() {
       )}
 
       {showSettings && (
-        <Settings onClose={() => setShowSettings(false)} />
+        <Settings onClose={() => setShowSettings(false)} onSimulatorClick={onSimulatorLaunch} />
       )}
 
       {animateBingo && <BingoConfetti score={bingoScore} onDone={() => setAnimateBingo(false)} />}

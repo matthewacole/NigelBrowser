@@ -728,7 +728,6 @@ html {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  padding: 4px;
 }
 
 .action-buttons-mobile {
@@ -973,6 +972,11 @@ html {
   .board-grid-wrapper {
     margin-bottom: 0;
     transform-origin: center center;
+    width: 100%;
+  }
+
+  .board-grid {
+    margin: 0 auto;
   }
 
   .board-container-mobile .board-grid {
@@ -1026,6 +1030,470 @@ html {
 @media (min-width: 1024px) {
   .game-board-mobile {
     display: none;
+  }
+}
+
+/* ========== Main Menu Settings Gear ========== */
+
+.main-menu-settings {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--text-muted);
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.main-menu-settings:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ========== Settings Modal ========== */
+
+.settings-modal .settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.settings-modal .setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.settings-modal .setting-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-purple);
+}
+
+.settings-divider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 12px 0;
+}
+
+.settings-simulator-btn {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 12px;
+  font-size: 15px;
+}
+
+/* ========== Sidebar Settings Button ========== */
+
+.sidebar-settings-btn {
+  font-size: 18px;
+  padding: 6px 10px;
+}
+
+/* ========== Game Simulator ========== */
+
+.simulator {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sim-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.sim-header h2 {
+  font-size: 16px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.sim-turn-counter {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.sim-config {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px;
+  gap: 24px;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.sim-config-section {
+  width: 100%;
+}
+
+.sim-config-section h3 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.sim-player-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sim-player-row .input {
+  flex: 1;
+}
+
+.sim-diff-btn {
+  min-width: 110px;
+  text-transform: capitalize;
+}
+
+.sim-remove-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sim-speed-options {
+  display: flex;
+  gap: 6px;
+}
+
+.sim-speed-options .btn {
+  flex: 1;
+  font-size: 12px;
+}
+
+.sim-batch-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sim-batch-row .input {
+  width: 100px;
+}
+
+.sim-batch-label {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.sim-config-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.sim-config-actions .btn {
+  flex: 1;
+}
+
+.sim-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.sim-board-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: auto;
+}
+
+.sim-sidebar {
+  width: 320px;
+  min-width: 320px;
+  background: var(--bg-sidebar);
+  border-left: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 16px;
+  gap: 16px;
+}
+
+.sim-scores h3,
+.sim-movelog h3,
+.sim-report h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.sim-score-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.sim-score-row.active {
+  background: rgba(124, 58, 237, 0.15);
+}
+
+.sim-player-name {
+  font-weight: 600;
+  font-size: 14px;
+  flex: 1;
+}
+
+.sim-diff-badge {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-surface);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: capitalize;
+}
+
+.sim-score-value {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--accent-gold);
+}
+
+.sim-movelog {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.sim-movelog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sim-movelog-empty {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 12px;
+}
+
+.sim-move-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.sim-move-row.play {
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.sim-move-row.pass {
+  background: rgba(160, 160, 176, 0.08);
+}
+
+.sim-move-turn {
+  min-width: 28px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.sim-move-player {
+  min-width: 70px;
+  color: var(--text-secondary);
+}
+
+.sim-move-badge {
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.sim-move-badge.play {
+  background: var(--accent-green);
+  color: white;
+}
+
+.sim-move-badge.pass {
+  background: var(--text-muted);
+  color: white;
+}
+
+.sim-move-badge.exchange {
+  background: var(--accent-blue);
+  color: white;
+}
+
+.sim-move-score {
+  font-weight: 600;
+  color: var(--accent-gold);
+  margin-left: auto;
+}
+
+.sim-move-bingo {
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--accent-pink);
+  background: rgba(236, 72, 153, 0.15);
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.sim-report {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.sim-report-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+.sim-report-row.winner {
+  background: rgba(226, 183, 20, 0.1);
+  border: 1px solid var(--accent-gold);
+}
+
+.sim-report-rank {
+  font-size: 18px;
+}
+
+.sim-report-name {
+  font-weight: 600;
+  flex: 1;
+}
+
+.sim-report-score {
+  font-weight: 700;
+  color: var(--accent-gold);
+  font-size: 16px;
+}
+
+.sim-report-stats {
+  margin-top: 12px;
+}
+
+.sim-report-stats p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.sim-report-stats h4 {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+
+.sim-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--bg-sidebar);
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.sim-controls-left {
+  display: flex;
+  gap: 6px;
+}
+
+.sim-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sim-speed-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+/* Simulator mobile */
+@media (max-width: 767px) {
+  .sim-body {
+    flex-direction: column;
+  }
+
+  .sim-sidebar {
+    width: 100%;
+    min-width: 0;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    max-height: 40vh;
+  }
+
+  .sim-board-area {
+    padding: 4px;
+  }
+
+  .sim-controls {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .sim-controls-right {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sim-config {
+    padding: 16px 12px;
   }
 }
 

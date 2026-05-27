@@ -4,6 +4,7 @@ import { SettingsProvider } from './state/SettingsContext';
 import { MainMenu } from './components/Menu/MainMenu';
 import { GameBoard } from './components/GameBoard/GameBoard';
 import { GameOver } from './components/GameOver/GameOver';
+import { GameSimulator } from './components/GameSimulator/GameSimulator';
 import { solverManager } from './solver/SolverManager';
 import { wordValidator } from './engine/WordValidator';
 import './styles/theme.css';
@@ -15,6 +16,7 @@ function AppContent() {
   const { state, dispatch, startNewGame } = useGame();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showSimulator, setShowSimulator] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -55,10 +57,18 @@ function AppContent() {
 
   const phase = state.game.phase;
 
+  if (showSimulator) {
+    return (
+      <div className="app">
+        <GameSimulator onBack={() => setShowSimulator(false)} />
+      </div>
+    );
+  }
+
   return (
     <div className="app">
-      {phase === 'setup' && <MainMenu />}
-      {phase === 'playing' && <GameBoard />}
+      {phase === 'setup' && <MainMenu onSimulatorLaunch={() => setShowSimulator(true)} />}
+      {phase === 'playing' && <GameBoard onSimulatorLaunch={() => setShowSimulator(true)} />}
       {phase === 'gameOver' && (
         <GameOver
           winners={state.ui.winners}
