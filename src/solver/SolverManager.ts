@@ -36,9 +36,22 @@ export class SolverManager {
         import('@scrabble-solver/configs'),
       ]);
 
-      const response = await fetch(`${import.meta.env.BASE_URL}twl06.txt`);
-      const text = await response.text();
-      const words = text.split(/\r?\n/).map(w => w.trim().toLowerCase()).filter(w => w.length > 0);
+      let words: string[];
+      // Check if we're in a browser (where import.meta.env exists from Vite)
+      if (typeof import.meta !== 'undefined' && import.meta.env && typeof import.meta.env.BASE_URL === 'string') {
+        const response = await fetch(`${import.meta.env.BASE_URL}twl06.txt`);
+        const text = await response.text();
+        words = text.split(/\r?\n/).map(w => w.trim().toLowerCase()).filter(w => w.length > 0);
+      } else {
+        // Node.js: use file system to read the word list
+        const { readFileSync } = await import('fs');
+        const { fileURLToPath } = await import('url');
+        const path = await import('path');
+        const modulePath = fileURLToPath(new URL('.', import.meta.url));
+        const filePath = path.resolve(modulePath, '../assets/twl06.txt');
+        const text = readFileSync(filePath, 'utf-8');
+        words = text.split(/\r?\n/).map(w => w.trim().toLowerCase()).filter(w => w.length > 0);
+      }
 
       this.trie = TrieModule.Trie.fromArray(words);
       this.config = configsModule.languages.englishUsScrabble;
@@ -57,25 +70,51 @@ export class SolverManager {
   ): Promise<AIMoveResult> {
     if (!this.ready) await this.load();
     try {
-      const moves = await this._getAllMoves(board, rack);
-      if (moves.length === 0) return { found: false };
+       const moves = await this._getAllMoves(board, rack);
+       if (moves.length === 0) return { found: false };
 
-      const sorted = [...moves].sort((a, b) => a.score - b.score);
+       // SORT DESCENDING: moves[0] = highest score, moves[N-1] = lowest score
+       const sorted = [...moves].sort((a, b) => b.score - a.score);
+       const N = sorted.length;
 
-      let chosen: AnalyzedMove;
-      switch (difficulty) {
-        case 'beginner':
-          chosen = sorted[0];
-          break;
-        case 'intermediate':
-          chosen = sorted[Math.floor(sorted.length / 2)];
-          break;
-        case 'expert':
-          chosen = sorted[sorted.length - 1];
-          break;
-        default:
-          chosen = sorted[sorted.length - 1];
-      }
+       // PROBABILISTIC SELECTION BASED ON DIFFICULTY
+       let chosen: AnalyzedMove;
+       const roll = Math.floor(Math.random() * 100) + 1; // 1-100
+
+       if (difficulty === 'beginner') {
+         if (roll <= 10) { // 10% chance: Lucky Fluke (Top 15%)
+           const maxIndex = Math.max(0, Math.floor(0.15 * N) - 1);
+           chosen = sorted[Math.floor(Math.random() * (maxIndex + 1))];
+         } else { // 90% chance: Standard Low-Mid (60% to 90%)
+           const minIndex = Math.floor(0.60 * N);
+           const maxIndex = Math.min(N - 1, Math.floor(0.90 * N));
+           chosen = sorted[minIndex + Math.floor(Math.random() * (maxIndex - minIndex + 1))];
+         }
+       } 
+       else if (difficulty === 'intermediate') {
+         if (roll <= 15) { // 15% chance: Great Catch (Top 5%)
+           const maxIndex = Math.max(0, Math.floor(0.05 * N) - 1);
+           chosen = sorted[Math.floor(Math.random() * (maxIndex + 1))];
+         } else { // 85% chance: Standard Mid (15% to 50%)
+           const minIndex = Math.floor(0.15 * N);
+           const maxIndex = Math.min(N - 1, Math.floor(0.50 * N));
+           chosen = sorted[minIndex + Math.floor(Math.random() * (maxIndex - minIndex + 1))];
+         }
+       } 
+       else if (difficulty === 'expert') {
+         if (roll <= 5) { // 5% chance: Minor Slip (Top 5% to 15%)
+           const minIndex = Math.floor(0.05 * N);
+           const maxIndex = Math.min(N - 1, Math.floor(0.15 * N));
+           chosen = sorted[minIndex + Math.floor(Math.random() * (maxIndex - minIndex + 1))];
+         } else { // 95% chance: Master Play (Top 3 absolute best moves)
+           const maxIndex = Math.min(2, N - 1); // Top 3: indices 0,1,2
+           chosen = sorted[Math.floor(Math.random() * (maxIndex + 1))];
+         }
+       } 
+       else {
+         // Default to expert behavior
+         chosen = sorted[0];
+       }
 
       const found = this._findWordPlacement(chosen.word, board, rack);
       if (!found) return { found: false };
