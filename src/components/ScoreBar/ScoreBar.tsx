@@ -8,7 +8,6 @@ interface ScoreBarProps {
   currentPlayerIndex: number;
   turnNumber: number;
   moveHistory: RecordedMove[];
-  onSettingsClick: () => void;
 }
 
 function AnimatedScore({ score }: { score: number }) {
@@ -38,7 +37,7 @@ function AnimatedScore({ score }: { score: number }) {
   return <>{display}</>;
 }
 
-export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory, onSettingsClick }: ScoreBarProps) {
+export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory }: ScoreBarProps) {
   const [showMoveLog, setShowMoveLog] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -73,14 +72,6 @@ export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory,
           </div>
         ))}
       </div>
-      <button
-        className="score-bar-settings"
-        onClick={(e) => { e.stopPropagation(); onSettingsClick(); }}
-        aria-label="Settings"
-      >
-        ⚙️
-      </button>
-
       {showMoveLog && (
         <div className="score-bar-dropdown" ref={dropdownRef}>
           <div className="score-bar-dropdown-header">Move Log</div>
@@ -101,8 +92,9 @@ export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory,
                 } else {
                   label = 'PASS'; cls = 'pass';
                 }
+                const isNewest = i === 0;
                 return (
-                  <div key={i} className={`score-bar-move-row ${cls}`}>
+                  <div key={i} className={`score-bar-move-row ${cls} ${isNewest ? 'new-entry' : ''}`}>
                     <span className="score-bar-move-player">{pName}</span>
                     <span className={`score-bar-move-badge ${cls}`}>{label}</span>
                     {text && <span className="score-bar-move-text">{text}</span>}

@@ -96,7 +96,7 @@ export function BoardCell({
         <Tile
           tile={square.tile}
           size={cellSize - 2}
-          justPlaced={tileJustPlaced}
+          justPlaced={tileJustPlaced || tileStaggerDelay !== undefined}
           style={{ borderRadius: 2, boxShadow: 'none', ...tileStyle }}
         />
       )}

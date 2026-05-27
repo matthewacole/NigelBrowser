@@ -4,7 +4,6 @@ import type { Move } from '../../types/Move';
 import { useGame } from '../../state/GameContext';
 import { useResponsive } from '../../hooks/useResponsive';
 import { BoardGrid, type BoardGridHandle } from '../Board/BoardGrid';
-import { AppleIntelligenceBorder } from '../Board/AppleIntelligenceBorder';
 import { Rack } from '../Rack/Rack';
 import { Scoreboard } from '../Scoreboard/Scoreboard';
 import { ScoreBar } from '../ScoreBar/ScoreBar';
@@ -91,6 +90,23 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
     dispatch({ type: 'SHUFFLE_RACK' });
   }, [dispatch]);
 
+  // Shake-to-shuffle on mobile
+  useEffect(() => {
+    if (!isMobile) return;
+    let lastX = 0, lastY = 0, lastZ = 0, lastShake = 0;
+    const handler = (e: DeviceMotionEvent) => {
+      const a = e.accelerationIncludingGravity;
+      if (!a?.x || !a?.y || !a?.z) return;
+      if (Math.abs(a.x + a.y + a.z - lastX - lastY - lastZ) > 25) {
+        const now = Date.now();
+        if (now - lastShake > 1000) { lastShake = now; handleShuffle(); }
+      }
+      lastX = a.x; lastY = a.y; lastZ = a.z;
+    };
+    window.addEventListener('devicemotion', handler);
+    return () => window.removeEventListener('devicemotion', handler);
+  }, [isMobile, handleShuffle]);
+
   const handleRackTilePointerDown = useCallback((tile: TileType, e: React.PointerEvent) => {
     boardGridRef.current?.handleRackPointerDown(tile, e);
   }, []);
@@ -138,7 +154,6 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
           currentPlayerIndex={state.game.currentPlayerIndex}
           turnNumber={state.game.turnNumber}
           moveHistory={state.game.moveHistory}
-          onSettingsClick={() => setShowSettings(true)}
         />
 
         {state.ui.errorMessage && (
@@ -158,7 +173,7 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
             sidebarWidth={0}
             padding={boardPadding}
           />
-          {isAIThinking && <AppleIntelligenceBorder isBingoMode={state.ui.showBingoConfetti} />}
+          <div className={`${isAIThinking ? 'ai-thinking' : ''}`} style={{position:'absolute',inset:0,pointerEvents:'none',borderRadius:6}} />
         </div>
 
         {showExchange ? (
@@ -193,18 +208,18 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
                 Pass
               </button>
               <button
-                className="btn btn-ghost"
-                disabled={isAIThinking}
-                onClick={handleShuffle}
-              >
-                Shuffle
-              </button>
-              <button
                 className="btn btn-danger"
                 disabled={isAIThinking}
                 onClick={forfeit}
               >
                 Forfeit
+              </button>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setShowSettings(true)}
+                aria-label="Settings"
+              >
+                ⚙️
               </button>
             </div>
           </>
@@ -266,7 +281,7 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
             sidebarWidth={sidebarWidth}
             padding={boardPadding}
           />
-          {isAIThinking && <AppleIntelligenceBorder isBingoMode={state.ui.showBingoConfetti} />}
+          <div className={`${isAIThinking ? 'ai-thinking' : ''}`} style={{position:'absolute',inset:0,pointerEvents:'none',borderRadius:6}} />
         </div>
 
         {showExchange ? (
@@ -299,13 +314,6 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
                 onClick={passTurn}
               >
                 Pass
-              </button>
-              <button
-                className="btn btn-ghost"
-                disabled={isAIThinking}
-                onClick={handleShuffle}
-              >
-                Shuffle
               </button>
               <button
                 className="btn btn-danger"

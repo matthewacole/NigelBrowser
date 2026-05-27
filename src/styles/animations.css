@@ -1,50 +1,13 @@
-/* AI Thinking Border */
-.ai-border {
-  position: absolute;
-  inset: -4px;
-  border-radius: 10px;
-  pointer-events: none;
-  z-index: 10;
-  background: conic-gradient(
-    from 0deg,
-    transparent,
-    transparent 10%,
-    #7c3aed 25%,
-    #3b82f6 40%,
-    transparent 50%,
-    transparent 60%,
-    #ec4899 75%,
-    #7c3aed 90%,
-    transparent
-  );
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: xor;
-  padding: 3px;
-  animation:
-    rotate-gradient 3s linear infinite,
-    border-pulse 2s ease-in-out infinite;
-  filter: blur(0.5px);
-  box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
-  transition: box-shadow 0.3s ease-in-out, opacity 0.3s ease-in-out;
+/* AI Thinking Glow */
+@keyframes ai-glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(124, 58, 237, 0.4), 0 0 40px rgba(59, 130, 246, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(124, 58, 237, 0.8), 0 0 80px rgba(59, 130, 246, 0.5); }
 }
 
-.ai-border.bingo-mode {
-  box-shadow: 0 0 30px rgba(124, 58, 237, 0.8);
-  opacity: 1;
-  animation:
-    rotate-gradient 3s linear infinite,
-    border-pulse 0.8s ease-in-out infinite;
-}
-
-@keyframes rotate-gradient {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes border-pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+.board-container.ai-thinking,
+.board-container-mobile.ai-thinking {
+  animation: ai-glow-pulse 2s ease-in-out infinite;
+  border-radius: 6px;
 }
 
 /* Floating tiles on menu */
@@ -66,14 +29,29 @@
   animation: tile-place 0.35s ease-out;
 }
 
-/* Move log entry slide-in */
+/* Move log entry — live sports blog style */
 @keyframes move-enter {
-  0% { transform: translateY(-12px); opacity: 0; }
+  0% { transform: translateY(-20px); opacity: 0; }
   100% { transform: translateY(0); opacity: 1; }
 }
 
+@keyframes move-highlight {
+  0% { background: rgba(124, 58, 237, 0.12); border-left-color: #7c3aed; }
+  100% { background: transparent; border-left-color: transparent; }
+}
+
 .move-row.new-entry {
-  animation: move-enter 0.35s ease-out;
+  animation:
+    move-enter 0.4s ease-out,
+    move-highlight 1.5s ease-out forwards;
+  border-left: 3px solid transparent;
+}
+
+.score-bar-move-row.new-entry {
+  animation:
+    move-enter 0.4s ease-out,
+    move-highlight 1.5s ease-out forwards;
+  border-left: 3px solid transparent;
 }
 
 /* Score popup */
