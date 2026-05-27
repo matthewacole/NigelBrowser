@@ -1,3 +1,36 @@
+/* AI Score Tile Border */
+.score-ai-border {
+  position: relative;
+}
+.score-ai-border::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 10;
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    transparent 10%,
+    #7c3aed 25%,
+    #3b82f6 40%,
+    transparent 50%,
+    transparent 60%,
+    #ec4899 75%,
+    #7c3aed 90%,
+    transparent
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: xor;
+  padding: 3px;
+  animation:
+    rotate-gradient 3s linear infinite,
+    border-pulse 2s ease-in-out infinite;
+  filter: blur(0.5px);
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+}
+
 /* AI Thinking Border */
 .ai-border {
   position: absolute;

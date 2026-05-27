@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useSettings } from '../../state/SettingsContext';
 import { DebugPanel } from '../DebugPanel';
 
+const APP_VERSION = 'Nigel Browser v0.9.0-beta';
+
 interface SettingsProps {
   onClose: () => void;
   onSimulatorClick?: () => void;
@@ -56,7 +58,18 @@ export function Settings({ onClose, onSimulatorClick }: SettingsProps) {
               onChange={e => updateSettings({ autoRecallOnInvalid: e.target.checked })}
             />
           </label>
+
+          <label className="setting-row">
+            <span>Sound Effects</span>
+            <input
+              type="checkbox"
+              checked={settings.soundEnabled}
+              onChange={e => updateSettings({ soundEnabled: e.target.checked })}
+            />
+          </label>
         </div>
+
+        <div className="settings-version">{APP_VERSION}</div>
 
         {onSimulatorClick && (
           <>

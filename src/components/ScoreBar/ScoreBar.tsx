@@ -59,7 +59,7 @@ export function ScoreBar({ players, currentPlayerIndex, turnNumber, moveHistory,
         {players.map((player, idx) => (
           <div
             key={player.id}
-            className={`score-bar-player ${idx === currentPlayerIndex ? 'active' : ''}`}
+            className={`score-bar-player ${idx === currentPlayerIndex ? 'active' : ''} ${player.type === 'computer' && idx === currentPlayerIndex ? 'score-ai-border' : ''}`}
           >
             <span className="score-bar-name">
               {player.name}

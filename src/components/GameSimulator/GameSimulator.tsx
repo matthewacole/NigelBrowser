@@ -3,7 +3,7 @@ import { BoardGrid } from '../Board/BoardGrid';
 import { GameSimulationRunner, SPEED_MS, type Speed } from '../../ai/GameSimulationRunner';
 import type { GameReport, BatchResult, TurnRecord } from '../../ai/GameReporter';
 import type { Player } from '../../types/Player';
-import { createPlayer } from '../../types/Player';
+import { createPlayer, difficultyAiName } from '../../types/Player';
 
 interface GameSimulatorProps {
   onBack: () => void;
@@ -15,8 +15,8 @@ export function GameSimulator({ onBack }: GameSimulatorProps) {
   const [phase, setPhase] = useState<SimPhase>('config');
   const [speed, setSpeed] = useState<Speed>('normal');
   const [playerConfigs, setPlayerConfigs] = useState<{ name: string; difficulty: string }[]>([
-    { name: 'AI Alice', difficulty: 'expert' },
-    { name: 'AI Bob', difficulty: 'expert' },
+    { name: difficultyAiName('expert'), difficulty: 'expert' },
+    { name: difficultyAiName('intermediate'), difficulty: 'intermediate' },
   ]);
   const [batchCount, setBatchCount] = useState(10);
   const [report, setReport] = useState<GameReport | null>(null);
@@ -136,7 +136,7 @@ export function GameSimulator({ onBack }: GameSimulatorProps) {
   }, []);
 
   const addPlayer = useCallback(() => {
-    setPlayerConfigs(prev => [...prev, { name: `AI ${String.fromCharCode(65 + prev.length)}`, difficulty: 'expert' }]);
+    setPlayerConfigs(prev => [...prev, { name: difficultyAiName('expert'), difficulty: 'expert' }]);
   }, []);
 
   const removePlayer = useCallback((index: number) => {

@@ -304,7 +304,7 @@ export function downloadReport(html: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `nigel-report-${new Date().toISOString().slice(0, 10)}.html`;
+      a.download = `nigel-report-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.html`;
   a.click();
   URL.revokeObjectURL(url);
 }

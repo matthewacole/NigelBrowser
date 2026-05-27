@@ -6,6 +6,7 @@ export interface Settings {
   highlightValidWords: boolean;
   darkMode: boolean;
   autoRecallOnInvalid: boolean;
+  soundEnabled: boolean;
 }
 
 const defaultSettings: Settings = {
@@ -14,6 +15,7 @@ const defaultSettings: Settings = {
   highlightValidWords: true,
   darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
   autoRecallOnInvalid: false,
+  soundEnabled: true,
 };
 
 function loadSettings(): Settings {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Player, Difficulty, PlayerType } from '../../types/Player';
-import { createPlayer, difficultyDisplayName } from '../../types/Player';
+import { createPlayer, difficultyDisplayName, difficultyAiName } from '../../types/Player';
 import { MAX_PLAYERS } from '../../types/Constants';
 
 interface GameSetupProps {
@@ -12,7 +12,7 @@ const DIFFICULTIES: Difficulty[] = ['beginner', 'intermediate', 'expert'];
 
 export function GameSetup({ onStart, onCancel }: GameSetupProps) {
   const [playerCount, setPlayerCount] = useState(2);
-  const [playerNames, setPlayerNames] = useState<string[]>(['You', 'Expert Nigel']);
+  const [playerNames, setPlayerNames] = useState<string[]>(['You', difficultyAiName('expert')]);
   const [playerTypes, setPlayerTypes] = useState<PlayerType[]>(['human', 'computer']);
   const [difficulties, setDifficulties] = useState<(Difficulty | null)[]>([null, 'expert']);
 
@@ -74,7 +74,7 @@ export function GameSetup({ onStart, onCancel }: GameSetupProps) {
                   if (addCount > 0) {
                     for (let i = 0; i < addCount; i++) {
                       const idx = playerNames.length + i;
-                      setPlayerNames(prev => [...prev, `Player ${idx + 1}`]);
+                      setPlayerNames(prev => [...prev, difficultyAiName('intermediate')]);
                       setPlayerTypes(prev => [...prev, 'computer']);
                       setDifficulties(prev => [...prev, 'intermediate']);
                     }

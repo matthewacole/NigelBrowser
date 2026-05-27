@@ -4,7 +4,7 @@ import type { Move } from '../../types/Move';
 import { useGame } from '../../state/GameContext';
 import { useResponsive } from '../../hooks/useResponsive';
 import { BoardGrid, type BoardGridHandle } from '../Board/BoardGrid';
-import { AppleIntelligenceBorder } from '../Board/AppleIntelligenceBorder';
+
 import { Rack } from '../Rack/Rack';
 import { Scoreboard } from '../Scoreboard/Scoreboard';
 import { ScoreBar } from '../ScoreBar/ScoreBar';
@@ -158,7 +158,6 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
             sidebarWidth={0}
             padding={boardPadding}
           />
-          {isAIThinking && <AppleIntelligenceBorder isBingoMode={state.ui.showBingoConfetti} />}
         </div>
 
         {showExchange ? (
@@ -266,7 +265,6 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
             sidebarWidth={sidebarWidth}
             padding={boardPadding}
           />
-          {isAIThinking && <AppleIntelligenceBorder isBingoMode={state.ui.showBingoConfetti} />}
         </div>
 
         {showExchange ? (

@@ -9,6 +9,8 @@ import { generateReport, downloadReport } from '../utils/reportGenerator';
 import { debugLogger } from '../utils/DebugLogger';
 import { validatePlacement } from '../engine/GameEngine';
 import { wordValidator } from '../engine/WordValidator';
+import { soundManager } from '../audio/SoundManager';
+import { useSettings } from './SettingsContext';
 
 interface GameContextValue {
   state: AppState;
@@ -30,10 +32,13 @@ const GameContext = createContext<GameContextValue | null>(null);
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(gameReducer, initialAppState);
+  const { settings } = useSettings();
   const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAIThinkingRef = useRef(false);
   const stateRef = useRef(state);
   stateRef.current = state;
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
 
   const getSavedGameExists = useCallback(() => hasSavedGame(), []);
 
@@ -62,6 +67,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const attemptPlay = useCallback((move: Move) => {
     dispatch({ type: 'COMMIT_MOVE', move });
+    if (settingsRef.current.soundEnabled && move.isBingo) {
+      soundManager.playApplause();
+    }
   }, []);
 
   const exchangeTiles = useCallback((tileIds: string[]) => {
@@ -204,6 +212,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
       };
 
       dispatch({ type: 'COMMIT_MOVE', move });
+      if (settingsRef.current.soundEnabled) {
+        if (move.isBingo) {
+          soundManager.playApplause();
+        } else {
+          soundManager.playBeep();
+        }
+      }
     } catch (e) {
       const s = stateRef.current;
       const currentPlayer = s.game.players[s.game.currentPlayerIndex];

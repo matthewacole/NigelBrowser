@@ -1084,6 +1084,14 @@ html {
   accent-color: var(--accent-purple);
 }
 
+.settings-version {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
 .settings-divider {
   border: none;
   border-top: 1px solid var(--border-color);

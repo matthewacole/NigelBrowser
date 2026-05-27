@@ -58,7 +58,7 @@ export function Scoreboard({ players, currentPlayerIndex, turnNumber }: Scoreboa
         return (
           <div
             key={player.id}
-            className={`player-score ${idx === currentPlayerIndex ? 'active' : ''}`}
+            className={`player-score ${idx === currentPlayerIndex ? 'active' : ''} ${player.type === 'computer' && idx === currentPlayerIndex ? 'score-ai-border' : ''}`}
           >
             <div className="player-info">
               <span className="player-name">
