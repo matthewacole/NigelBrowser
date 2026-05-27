@@ -731,7 +731,7 @@ html {
   align-items: center;
   justify-content: center;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .action-buttons-mobile {

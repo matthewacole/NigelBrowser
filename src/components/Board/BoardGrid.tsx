@@ -18,6 +18,7 @@ interface BoardGridProps {
   aiStaggerMap?: Map<string, number>;
   sidebarWidth?: number;
   padding?: number;
+  boardTransform?: string;
 }
 
 export interface BoardGridHandle {
@@ -53,7 +54,7 @@ const EMPTY_DRAG: DragState = {
 
 export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function BoardGrid({
   board, onCommitMove, rackTiles, onRecallTiles, readOnly, onPlacedTilesChange, aiStaggerMap,
-  sidebarWidth = 0, padding = 32,
+  sidebarWidth = 0, padding = 32, boardTransform,
 }, ref) {
   const [drag, setDrag] = useState<DragState>(EMPTY_DRAG);
   const [placedTiles, setPlacedTiles] = useState<Map<string, { tile: TileType; row: number; col: number }>>(new Map());
@@ -346,7 +347,7 @@ export const BoardGrid = forwardRef<BoardGridHandle, BoardGridProps>(function Bo
   }
 
   return (
-    <div className="board-grid-wrapper" style={{ position: 'relative', marginBottom: readOnly ? 0 : undefined }}>
+    <div className="board-grid-wrapper" style={{ position: 'relative', marginBottom: readOnly ? 0 : undefined, transform: boardTransform }}>
       <div
         ref={boardRef}
         className="board-grid"

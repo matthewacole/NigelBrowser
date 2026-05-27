@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type { Tile as TileType } from '../../types/Tile';
 import type { Move } from '../../types/Move';
 import { useGame } from '../../state/GameContext';
 import { useResponsive } from '../../hooks/useResponsive';
+import { usePinchZoom } from '../../hooks/usePinchZoom';
 import { BoardGrid, type BoardGridHandle } from '../Board/BoardGrid';
 import { Rack } from '../Rack/Rack';
 import { Scoreboard } from '../Scoreboard/Scoreboard';
@@ -30,8 +31,19 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
   const [animateBingo, setAnimateBingo] = useState(false);
   const [bingoScore, setBingoScore] = useState(0);
   const [placedTileIds, setPlacedTileIds] = useState<string[]>([]);
-  const [aiStaggerMap, setAiStaggerMap] = useState<Map<string, number>>(new Map());
   const boardGridRef = useRef<BoardGridHandle>(null);
+
+  const { boardTransform, touchHandlers } = usePinchZoom();
+
+  const aiStaggerMap = useMemo(() => {
+    const positions = state.ui.lastPlacedTilePositions;
+    if (positions.length === 0) return new Map<string, number>();
+    const stagger = new Map<string, number>();
+    positions.forEach((pos, i) => {
+      stagger.set(`${pos.row},${pos.col}`, i * 0.12);
+    });
+    return stagger;
+  }, [state.ui.lastPlacedTilePositions]);
 
   const currentPlayer = state.game.players[state.game.currentPlayerIndex];
   const isAIThinking = state.game.players[state.game.currentPlayerIndex]?.type === 'computer';
@@ -47,24 +59,7 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
     }
   }, [state.ui.showBingoConfetti, state.ui.bingoScore]);
 
-  // AI staggered tile placement
-  useEffect(() => {
-    const positions = state.ui.lastPlacedTilePositions;
-    if (positions.length > 0) {
-      const lastMove = state.game.moveHistory[state.game.moveHistory.length - 1];
-      const lastPlayer = lastMove ? state.game.players[lastMove.playerIndex] : null;
-      if (lastPlayer?.type === 'computer') {
-        const stagger = new Map<string, number>();
-        positions.forEach((pos, i) => {
-          stagger.set(`${pos.row},${pos.col}`, i * 0.4);
-        });
-        setAiStaggerMap(stagger);
-        const maxDelay = positions.length * 400 + 100;
-        const timer = setTimeout(() => setAiStaggerMap(new Map()), maxDelay);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [state.game.moveHistory.length, state.ui.lastPlacedTilePositions, state.game.players]);
+  // AI staggered tile placement: stagger computed synchronously via useMemo above
 
   const handleCommitMove = useCallback((move: Move) => {
     attemptPlay(move);
@@ -161,7 +156,7 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
           <div className="error-banner">{state.ui.errorMessage}</div>
         )}
 
-        <div className="board-container-mobile">
+        <div className="board-container-mobile" style={{touchAction:'none'}} {...touchHandlers}>
           <BoardGrid
             ref={boardGridRef}
             board={state.game.board}
@@ -173,6 +168,7 @@ export function GameBoard({ onSimulatorLaunch }: GameBoardProps) {
             aiStaggerMap={aiStaggerMap}
             sidebarWidth={0}
             padding={boardPadding}
+            boardTransform={boardTransform}
           />
           <div className={`${isAIThinking ? 'ai-thinking' : ''}`} style={{position:'absolute',inset:0,pointerEvents:'none',borderRadius:6}} />
         </div>
