@@ -184,6 +184,14 @@ export function gameReducer(state: AppState, action: GameAction): AppState {
 
       debugLogger.log(newGame.turnNumber, player.name, 'COMMIT', `${player.name} committed ${move.wordsFormed.join(', ')} for ${move.score} pts`, { words: move.wordsFormed.join(', '), score: move.score, tiles_used: tilesUsed, tiles_drawn: drawn.length, player_score: player.score, bag_remaining: newGame.bag.count });
 
+      for (const pt of move.tiles) {
+        const bonus = newGame.board[pt.row][pt.col].bonus;
+        debugLogger.log(newGame.turnNumber, player.name, 'PLACE',
+          `Placed ${pt.tile.letter} at (${pt.row},${pt.col}) [base: ${pt.tile.score}, bonus: ${bonus}]`,
+          { letter: pt.tile.letter, row: pt.row, col: pt.col, tile_score: pt.tile.score, bonus_square: bonus }
+        );
+      }
+
       if (isBingo) {
         debugLogger.log(newGame.turnNumber, player.name, 'BINGO', `${player.name} scored a BINGO! +${move.score} pts`);
       }
